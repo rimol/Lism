@@ -1,7 +1,11 @@
+#reversi {
+    background-color: azure;
+}
+
 #reversi-board{
     position: relative;
-    width: 340px;
-    height: 340px;
+    width: 320px;
+    height: 320px;
     top: 0;
     left: 0;
     right: 0;
@@ -15,29 +19,23 @@
     height: 320px;
     right: 0;
     bottom: 0;
+    clear: both;
 }
 
-.grid-column-label {
-    width: 40px;
-    height: 20px;
-    background-color: #ffffff;
-    color: #000000;
-
-    text-align: center;
-    vertical-align: bottom;
+#statusbar {
+    position: relative;
+    width: 400px;
+    height: 80px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 10px auto;
 }
 
-.grid-row-label {
-    width: 20px;
-    height: 40px;
-    background-color: #ffffff;
-    color: #000000;
-    text-align: right;
-    padding-right: 10px;
-}
-
-#grid-labels {
-    border-collapse: collapse;
-    border-style: none;
-    text-align: right;
+.status {
+    float: left;
+    width: 200px;
+    height: 80px;
+    background-color: aliceblue;
 }

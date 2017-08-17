@@ -10,6 +10,10 @@
         stone: Player.white
     };
 
+    let player_stone_count = document.getElementById("player-stone-count");
+    let ai_stone_count = document.getElementById("ai-stone-count");
+    let ai_comment = document.getElementById("ai-comment");
+
     window.onload = function() {
         main(-1, -1);
     };
@@ -26,9 +30,9 @@
         let currentBoard = reversi.getCurrentBoard();
 
         BoardRenderer.update(currentBoard, h, v);
-        //テキストの表示の更新
-        //player_stone_count.innerHTML = PlayerInfo.stone == Player.black ? currentBoard.getBlackCount() : currentBoard.getWhiteCount();
-        //opponent_stone_count.innerHTML = OpponentInfo.stone == Player.black ? currentBoard.getBlackCount() : currentBoard.getWhiteCount();
+
+        player_stone_count.innerHTML = PlayerInfo.stone == Player.black ? currentBoard.getBlackCount() : currentBoard.getWhiteCount();
+        ai_stone_count.innerHTML = AIInfo.stone == Player.black ? currentBoard.getBlackCount() : currentBoard.getWhiteCount();
     };
 
     BoardRenderer.setCallbackOnRenderingFinished(function () {
@@ -41,6 +45,8 @@
 
             let startTime = Date.now();
             let nextBoard = conankun.determineNextBoard(nextBoards);
+
+            ai_comment.innerHTML = "最終石差予想：" + (conankun.prediction || "不明");
 
             setTimeout(function () {
                 let placed_upper = (nextBoard.getUpperBlack() | nextBoard.getUpperWhite()) ^ (currentBoard.getUpperBlack() | currentBoard.getUpperWhite());

@@ -34,15 +34,10 @@
     let render = function(board, diff, count) {
         context.scale(2, 2);
         context.clearRect(0, 0, boardSize, boardSize);
-        context.fillStyle = "#008000";
+        context.fillStyle = "#207c35";
         context.fillRect(0, 0, boardSize, boardSize);
 
-        context.shadowColor = "#000000";
-        context.shadowOffsetX = 0;
-        context.shadowOffsetY = 0;
-        context.shadowBlur = 9;
-
-        context.fillStyle = "#000000";
+        context.fillStyle = "#111111";
         for (let x = 0; x <= boardSize; x += boardSize / 8) {
             context.beginPath();
             context.moveTo(x, 0);

@@ -66,6 +66,7 @@
 
     this.AI = function(ownStone) {
         this.ownStone = ownStone;
+        this.prediction = null;
         this.evaluationType = EvaluationType.opening;
     };
 
@@ -93,6 +94,10 @@
                 mscore = score;
                 candidates.push(nextBoards[i]);
             }
+        }
+
+        if (this.evaluationType == EvaluationType.final) {
+            this.prediction = mscore;
         }
 
         return candidates[Math.floor(Math.random() * candidates.length)];
