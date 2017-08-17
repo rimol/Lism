@@ -125,7 +125,7 @@
         context.scale(0.5, 0.5);
     });
 
-    this.Gameboard = {
+    this.BoardRenderer = {
         update: update,
         setCallbackOnGridClicked: setCallbackOnGridClicked,
         setCallbackOnRenderingFinished: setCallbackOnRenderingFinished

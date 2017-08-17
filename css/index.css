@@ -16,3 +16,28 @@
     right: 0;
     bottom: 0;
 }
+
+.grid-column-label {
+    width: 40px;
+    height: 20px;
+    background-color: #ffffff;
+    color: #000000;
+
+    text-align: center;
+    vertical-align: bottom;
+}
+
+.grid-row-label {
+    width: 20px;
+    height: 40px;
+    background-color: #ffffff;
+    color: #000000;
+    text-align: right;
+    padding-right: 10px;
+}
+
+#grid-labels {
+    border-collapse: collapse;
+    border-style: none;
+    text-align: right;
+}
