@@ -1,0 +1,18 @@
+#reversi-board{
+    position: relative;
+    width: 340px;
+    height: 340px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0 auto;
+}
+
+#canvas-gameboard{
+    position: absolute;
+    width: 320px;
+    height: 320px;
+    right: 0;
+    bottom: 0;
+}
