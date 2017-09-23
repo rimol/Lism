@@ -112,7 +112,7 @@ Board.getMoveBit = function(h, v) {
     return 1 << ((7 - h) | ((3 - (v & 3)) << 3));
 };
 
-//借り物:
+//借り物: https://github.com/saharan/ReversiAI/blob/master/src/reversi/core/Board.hx
 Board.mobility = function (upperPlr, lowerPlr, upperOpnt, lowerOpnt, out_mobility) {
     let upperMobility = 0;
     let lowerMobility = 0;
@@ -238,6 +238,7 @@ Board.mobility = function (upperPlr, lowerPlr, upperOpnt, lowerOpnt, out_mobilit
     out_mobility.lowerMobility = lowerMobility;
 };
 
+//ここからは自分のです
 Board.flipOnUpperMove = function (uplr, lplr, uopnt, lopnt, uplrFlp, lplrFlp, uopntFlp, lopntFlp, moveBit, out_flip) {
     let movePos = Utils.bitPosition(moveBit);
     let mb1 = moveBit << 1;
