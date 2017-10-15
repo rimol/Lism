@@ -316,7 +316,16 @@
             else {
                 let solver = new ReversiSolver(board, this.ownStone);
                 let result = solver.solve();
-                this.comment = "謎が解けた！ [" + result.result + "]";
+                if (result.result > 0) {
+                    this.comment = result.result + "石差で僕の勝ちでおまんがな。";
+                }
+                else if (result.result === 0) {
+                    this.comment = "引き分けって分かってしもたんでんがな";
+                }
+                else {
+                    this.comment = -result.result + "石差で負ける...妙だな";
+                }
+
                 return result;
             }
         }

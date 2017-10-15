@@ -9,12 +9,20 @@
         return ((uplr * 2 + lplr * 3 + uopnt * 5 + lopnt * 7) >>> 7) & 0x7ffff;
     };
 
+    const bitParity = function(x) {
+        x = (x & 0xffff) ^ (x >>> 16);
+        x = (x & 0xff) ^ (x >>> 8);
+        x = (x & 0xf) ^ (x >>> 4);
+        x = (x & 3) ^ (x >>> 2);
+        return (x & 1) ^ (x >>> 1);
+    };
+
     this.ReversiSolver = function (board, player) {
         let leafCount = 0;
         let internalNodeCount = 0;
         const temp = {};
 
-        const evaluateFinalBoards = function (uplr, lplr, uopnt, lopnt, min, max) {
+        const evaluateFinalBoards = function (uplr, lplr, uopnt, lopnt, min, max, passed) {
             let pCount = popCount64(uplr, lplr);
             let oCount = popCount64(uopnt, lopnt);
 
@@ -26,19 +34,17 @@
                 let uopntFlp = (lopnt << 24) | ((lopnt << 8) & 0x00ff0000) | ((lopnt >>> 8) & 0x0000ff00) | (lopnt >>> 24);
                 let lopntFlp = (uopnt << 24) | ((uopnt << 8) & 0x00ff0000) | ((uopnt >>> 8) & 0x0000ff00) | (uopnt >>> 24);
 
-                leafCount++;
-
                 if (upperMoveBit !== 0) {
                     flipOnUpperMove(uplr, lplr, uopnt, lopnt, uplrFlp, lplrFlp, uopntFlp, lopntFlp, upperMoveBit, temp);
                     if ((temp.upperFlip | temp.lowerFlip) === 0) {
                         flipOnUpperMove(uopnt, lopnt, uplr, lplr, uopntFlp, lopntFlp, uplrFlp, lplrFlp, upperMoveBit, temp);
 
                         let flipCountDoubled = popCount64(temp.upperFlip, temp.lowerFlip) * -2;
-                        return pCount - oCount + (flipCountDoubled && (internalNodeCount++, flipCountDoubled - 1));
+                        return pCount - oCount + (flipCountDoubled && (flipCountDoubled - 1));
                     }
                     else {
                         let flipCountDoubled = popCount64(temp.upperFlip, temp.lowerFlip) * 2;
-                        return pCount - oCount + (flipCountDoubled && (internalNodeCount++, flipCountDoubled + 1));
+                        return pCount - oCount + (flipCountDoubled && (flipCountDoubled + 1));
                     }
                 }
                 else {
@@ -47,11 +53,11 @@
                         flipOnLowerMove(uopnt, lopnt, uplr, lplr, uopntFlp, lopntFlp, uplrFlp, lplrFlp, lowerMoveBit, temp);
 
                         let flipCountDoubled = popCount64(temp.upperFlip, temp.lowerFlip) * -2;
-                        return pCount - oCount + (flipCountDoubled && (internalNodeCount++, flipCountDoubled - 1));
+                        return pCount - oCount + (flipCountDoubled && (flipCountDoubled - 1));
                     }
                     else {
                         let flipCountDoubled = popCount64(temp.upperFlip, temp.lowerFlip) * 2;
-                        return pCount - oCount + (flipCountDoubled && (internalNodeCount++, flipCountDoubled + 1));
+                        return pCount - oCount + (flipCountDoubled && (flipCountDoubled + 1));
                     }
                 }
             }
@@ -61,27 +67,60 @@
             let lpMobility = temp.lowerMobility;
 
             if ((upMobility | lpMobility) === 0) {
-                mobility(uopnt, lopnt, uplr, lplr, temp);
-
-                return (temp.upperMobility | temp.lowerMobility) === 0
-                    ? (leafCount++ , pCount - oCount)
-                    : -evaluateFinalBoards(uopnt, lopnt, uplr, lplr, -max, -min);
+                return passed ? pCount - oCount
+                    : -evaluateFinalBoards(uopnt, lopnt, uplr, lplr, -max, -min, true);
             }
-
-            internalNodeCount++;
 
             let uplrFlp = (lplr << 24) | ((lplr << 8) & 0x00ff0000) | ((lplr >>> 8) & 0x0000ff00) | (lplr >>> 24);
             let lplrFlp = (uplr << 24) | ((uplr << 8) & 0x00ff0000) | ((uplr >>> 8) & 0x0000ff00) | (uplr >>> 24);
             let uopntFlp = (lopnt << 24) | ((lopnt << 8) & 0x00ff0000) | ((lopnt >>> 8) & 0x0000ff00) | (lopnt >>> 24);
             let lopntFlp = (uopnt << 24) | ((uopnt << 8) & 0x00ff0000) | ((uopnt >>> 8) & 0x0000ff00) | (uopnt >>> 24);
 
-            let moveBit = upMobility & -upMobility;
+            let upperEmpty = ~(uplr | uopnt);
+            let oddUpperMobility = (upMobility & 0xf0f0f0f0 & -bitParity(upperEmpty & 0xf0f0f0f0)) | (upMobility & 0x0f0f0f0f & -bitParity(upperEmpty & 0x0f0f0f0f));
+
+            upMobility ^= oddUpperMobility;
+
+            let lowerEmpty = ~(lplr | lopnt);
+            let oddLowerMobility = (lpMobility & 0xf0f0f0f0 & -bitParity(lowerEmpty & 0xf0f0f0f0)) | (lpMobility & 0x0f0f0f0f & -bitParity(lowerEmpty & 0x0f0f0f0f));
+
+            lpMobility ^= oddLowerMobility;
+
+            let moveBit = oddUpperMobility & -oddUpperMobility;
             while (moveBit !== 0) {
                 flipOnUpperMove(uplr, lplr, uopnt, lopnt, uplrFlp, lplrFlp, uopntFlp, lopntFlp, moveBit, temp);
                 let uflip = temp.upperFlip;
                 let lflip = temp.lowerFlip;
 
-                let score = -evaluateFinalBoards(uopnt ^ uflip, lopnt ^ lflip, (uplr ^ uflip) | moveBit, lplr ^ lflip, -max, -min);
+                let score = -evaluateFinalBoards(uopnt ^ uflip, lopnt ^ lflip, (uplr ^ uflip) | moveBit, lplr ^ lflip, -max, -min, false);
+                if (score >= max) return score;
+                min = min < score ? score : min;
+
+                oddUpperMobility ^= moveBit;
+                moveBit = oddUpperMobility & -oddUpperMobility;
+            }
+
+            moveBit = oddLowerMobility & -oddLowerMobility;
+            while (moveBit !== 0) {
+                flipOnLowerMove(uplr, lplr, uopnt, lopnt, uplrFlp, lplrFlp, uopntFlp, lopntFlp, moveBit, temp);
+                let uflip = temp.upperFlip;
+                let lflip = temp.lowerFlip;
+
+                let score = -evaluateFinalBoards(uopnt ^ uflip, lopnt ^ lflip, uplr ^ uflip, (lplr ^ lflip) | moveBit, -max, -min, false);
+                if (score >= max) return score;
+                min = min < score ? score : min;
+
+                oddLowerMobility ^= moveBit;
+                moveBit = oddLowerMobility & -oddLowerMobility;
+            }
+
+            moveBit = upMobility & -upMobility;
+            while (moveBit !== 0) {
+                flipOnUpperMove(uplr, lplr, uopnt, lopnt, uplrFlp, lplrFlp, uopntFlp, lopntFlp, moveBit, temp);
+                let uflip = temp.upperFlip;
+                let lflip = temp.lowerFlip;
+
+                let score = -evaluateFinalBoards(uopnt ^ uflip, lopnt ^ lflip, (uplr ^ uflip) | moveBit, lplr ^ lflip, -max, -min, false);
                 if (score >= max) return score;
                 min = min < score ? score : min;
 
@@ -95,7 +134,7 @@
                 let uflip = temp.upperFlip;
                 let lflip = temp.lowerFlip;
 
-                let score = -evaluateFinalBoards(uopnt ^ uflip, lopnt ^ lflip, uplr ^ uflip, (lplr ^ lflip) | moveBit, -max, -min);
+                let score = -evaluateFinalBoards(uopnt ^ uflip, lopnt ^ lflip, uplr ^ uflip, (lplr ^ lflip) | moveBit, -max, -min, false);
                 if (score >= max) return score;
                 min = min < score ? score : min;
 
@@ -108,12 +147,11 @@
 
         const transpositionTable = [];
 
-        const evaluateFutureBoards = function (uplr, lplr, uopnt, lopnt, alpha, beta) {
+        const evaluateFutureBoards = function (uplr, lplr, uopnt, lopnt, alpha, beta, passed) {
             let pCount = popCount64(uplr, lplr);
             let oCount = popCount64(uopnt, lopnt);
-
             if (pCount + oCount >= 58) {
-                return evaluateFinalBoards(uplr, lplr, uopnt, lopnt, alpha, beta);
+                return evaluateFinalBoards(uplr, lplr, uopnt, lopnt, alpha, beta, passed);
             }
 
             mobility(uplr, lplr, uopnt, lopnt, temp);
@@ -121,11 +159,8 @@
             let lpMobility = temp.lowerMobility;
 
             if ((upMobility | lpMobility) === 0) {
-                mobility(uopnt, lopnt, uplr, lplr, temp);
-
-                return (temp.upperMobility | temp.lowerMobility) === 0
-                    ? (leafCount++ , pCount - oCount)
-                    : -evaluateFutureBoards(uopnt, lopnt, uplr, lplr, -beta, -alpha);
+                return passed ? pCount - oCount
+                    : -evaluateFutureBoards(uopnt, lopnt, uplr, lplr, -beta, -alpha, true);
             }
 
             let upperBound = 64;
@@ -152,8 +187,6 @@
                     upperBound: upperBound
                 };
             }
-
-            internalNodeCount++;
 
             let uplrFlp = (lplr << 24) | ((lplr << 8) & 0x00ff0000) | ((lplr >>> 8) & 0x0000ff00) | (lplr >>> 24);
             let lplrFlp = (uplr << 24) | ((uplr << 8) & 0x00ff0000) | ((uplr >>> 8) & 0x0000ff00) | (uplr >>> 24);
@@ -222,9 +255,7 @@
                 moveBit = lpMobility & -lpMobility;
             }
 
-            internalNodeCount++;
-
-            let bestScore = -evaluateFutureBoards(orderedMoves[0].uopnt, orderedMoves[0].lopnt, orderedMoves[0].uplr, orderedMoves[0].lplr, -beta, -alpha);
+            let bestScore = -evaluateFutureBoards(orderedMoves[0].uopnt, orderedMoves[0].lopnt, orderedMoves[0].uplr, orderedMoves[0].lplr, -beta, -alpha, false);
             if (bestScore >= beta) {
                 value.lowerBound = bestScore > lowerBound ? bestScore : lowerBound;
                 value.upperBound = upperBound;
@@ -235,7 +266,7 @@
             for (let i = 1; i < orderedMoves.length; i++) {
                 let move = orderedMoves[i];
 
-                let score = -evaluateFutureBoards(move.uopnt, move.lopnt, move.uplr, move.lplr, -a - 1, -a);
+                let score = -evaluateFutureBoards(move.uopnt, move.lopnt, move.uplr, move.lplr, -a - 1, -a, false);
 
                 if (score >= beta) {
                     value.lowerBound = score > lowerBound ? score : lowerBound;
@@ -244,7 +275,7 @@
                     return score;
                 }
                 else if (score > a) {
-                    a = bestScore = -evaluateFutureBoards(move.uopnt, move.lopnt, move.uplr, move.lplr, -beta, -score);
+                    a = bestScore = -evaluateFutureBoards(move.uopnt, move.lopnt, move.uplr, move.lplr, -beta, -score, false);
                     if (bestScore >= beta) {
                         value.lowerBound = bestScore > lowerBound ? bestScore : lowerBound;
                         value.upperBound = upperBound;
@@ -273,6 +304,8 @@
         };
 
         this.solve = function () {
+            let startTime = Date.now();
+            
             let uplr = player === Player.black ? board.upperBlack : board.upperWhite;
             let lplr = player === Player.black ? board.lowerBlack : board.lowerWhite;
             let uopnt = -player === Player.black ? board.upperBlack : board.upperWhite;
@@ -294,7 +327,7 @@
                 let uflip = temp.upperFlip;
                 let lflip = temp.lowerFlip;
 
-                let score = -evaluateFutureBoards(uopnt ^ uflip, lopnt ^ lflip, (uplr ^ uflip) | moveBit, lplr ^ lflip, -64, -bestScore);
+                let score = -evaluateFutureBoards(uopnt ^ uflip, lopnt ^ lflip, (uplr ^ uflip) | moveBit, lplr ^ lflip, -64, -bestScore, false);
                 if (score > bestScore) {
                     bestMove = bitPosition(moveBit);
                     bestScore = score;
@@ -310,7 +343,7 @@
                 let uflip = temp.upperFlip;
                 let lflip = temp.lowerFlip;
 
-                let score = -evaluateFutureBoards(uopnt ^ uflip, lopnt ^ lflip, uplr ^ uflip, (lplr ^ lflip) | moveBit, -64, -bestScore);
+                let score = -evaluateFutureBoards(uopnt ^ uflip, lopnt ^ lflip, uplr ^ uflip, (lplr ^ lflip) | moveBit, -64, -bestScore, false);
                 if (score > bestScore) {
                     bestMove = bitPosition(moveBit) + 32;
                     bestScore = score;
@@ -322,8 +355,7 @@
 
             return {
                 result: bestScore,
-                internalNodeCount: internalNodeCount,
-                leafCount: leafCount,
+                time: Date.now() - startTime,
                 h: 7 - bestMove & 7,
                 v: 3 - ((bestMove >>> 3) & 3) + (bestMove >>> 5) * 4
             };

@@ -1,5 +1,5 @@
 #reversi {
-    background-color: azure;
+    background-color: #353535;
 }
 
 #reversi-board{
@@ -24,7 +24,7 @@
 
 #statusbar {
     position: relative;
-    width: 400px;
+    width: 500px;
     height: 80px;
     top: 0;
     left: 0;
@@ -35,7 +35,8 @@
 
 .status {
     float: left;
-    width: 200px;
+    width: 250px;
     height: 80px;
-    background-color: aliceblue;
+    color: white;
+    background-color: #353535;
 }

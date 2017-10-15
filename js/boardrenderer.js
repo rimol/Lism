@@ -8,7 +8,7 @@
     let gridSize = Math.floor(boardSize / 8);
 
     let stoneImage = new Image();
-    stoneImage.src = "img/stones.png";
+    stoneImage.src = "img/stones_red.png";
 
     let callbacksOnRenderingFinished = [];
 
@@ -28,7 +28,7 @@
     let render = function (board, diff, count) {
         context.scale(2, 2);
         context.clearRect(0, 0, boardSize, boardSize);
-        context.fillStyle = "#3299ff";
+        context.fillStyle = "#a52250";
         context.fillRect(0, 0, boardSize, boardSize);
 
         context.fillStyle = "#000000";

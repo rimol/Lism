@@ -239,169 +239,187 @@ Board.mobility = function (upperPlr, lowerPlr, upperOpnt, lowerOpnt, out_mobilit
 };
 
 //ここからは自分のです
-Board.flipOnUpperMove = function (uplr, lplr, uopnt, lopnt, uplrFlp, lplrFlp, uopntFlp, lopntFlp, moveBit, out_flip) {
-    let movePos = Utils.bitPosition(moveBit);
-    let mb1 = moveBit << 1;
-    let upperFlip = 0;
-    let lowerFlip = 0;
-    let ut;
+{
+    const bitPosition = Utils.bitPosition;
 
-    let um = (((0x80808080 - moveBit) & 0x7f7f7f7f) << 1) | moveBit;
-    let umo = uopnt & um;
-    ut = (umo ^ (umo + mb1)) & um;
-    upperFlip |= (ut & uplr) && (ut & ~uplr);
+    //上側に石をおいたときのひっくり返る石を求める
+    Board.flipOnUpperMove = function (uplr, lplr, uopnt, lopnt, uplrFlp, lplrFlp, uopntFlp, lopntFlp, moveBit, out_flip) {
+        let movePos = bitPosition(moveBit);
+        let upperFlip = 0; //盤の上側のひっくり返る石
+        let lowerFlip = 0; //同じく下側
+        let umo = uopnt & 0x7e7e7e7e; //端で繰り上がりが止まるようにする
 
-    um = (0x08040201 << movePos) & ((moveBit & 0xf0f0f0f0) ? 0xf0f0f0f0 : 0xffffffff);
-    ut = (((uopnt | ~um) + mb1) & um) ^ (uopnt & um);
+        //左
+        let um = ((0x80808080 - moveBit) & 0x7f7f7f7f) << 1;// | moveBit; //上側のマスク
+        let ut = (((uopnt | ~um) + 1) & um) ^ (uopnt & um);
+        upperFlip |= (ut & uplr) && (ut & ~uplr);
 
-    upperFlip |= (ut & uplr) && (ut & ~uplr);
+        //左斜め前
+        um = (0x08040200 << movePos) & ((moveBit & 0xf0f0f0f0) ? 0xf0f0f0f0 : 0xffffffff);
+        ut = (((uopnt | ~um) + 1) & um) ^ (uopnt & um);
 
-    um = 0x01010101 << movePos;
-    ut = (((uopnt | ~um) + mb1) & um) ^ (uopnt & um);
+        upperFlip |= (ut & uplr) && (ut & ~uplr);
 
-    upperFlip |= (ut & uplr) && (ut & ~uplr);
+        //上
+        um = 0x01010100 << movePos;
+        ut = (((uopnt | ~um) + 1) & um) ^ (uopnt & um);
 
-    um = (0x00204081 << movePos) & ((moveBit & 0x0f0f0f0f) ? 0x0f0f0f0f : 0xffffffff);
-    ut = (((uopnt | ~um) + mb1) & um) ^ (uopnt & um);
+        upperFlip |= (ut & uplr) && (ut & ~uplr);
 
-    upperFlip |= (ut & uplr) && (ut & ~uplr);
+        //右斜め前
+        um = (0x00204080 << movePos) & ((moveBit & 0x0f0f0f0f) ? 0x0f0f0f0f : 0xffffffff);
+        ut = (((uopnt | ~um) + 1) & um) ^ (uopnt & um);
 
-    umo = uopnt & 0x7e7e7e7e;
-    ut = umo & (moveBit >>> 1);
-    ut |= umo & (ut >>> 1);
-    ut |= umo & (ut >>> 1);
-    ut |= umo & (ut >>> 1);
-    ut |= umo & (ut >>> 1);
-    ut |= umo & (ut >>> 1);
+        upperFlip |= (ut & uplr) && (ut & ~uplr);
 
-    upperFlip |= ((ut >>> 1) & uplr) && ut;
+        //右 mobilityと大体一緒
+        ut = umo & (moveBit >>> 1);
+        ut |= umo & (ut >>> 1);
+        ut |= umo & (ut >>> 1);
+        ut |= umo & (ut >>> 1);
+        ut |= umo & (ut >>> 1);
+        ut |= umo & (ut >>> 1);
 
-    movePos = (movePos & 0b111) | (0b11000 - (movePos & 0b11000));
-    let _moveBit = 1 << movePos;
-    let _mb1 = _moveBit << 1;
-    let b33 = _mb1 === 0;
-    let _upperFlip = 0;
-    let _lowerFlip = 0;
+        upperFlip |= ((ut >>> 1) & uplr) && ut;
 
-    let lm = (0x08040201 << movePos) & ((_moveBit & 0xf0f8fcfe) ? 0xf0f8fcfe : 0xffffffff);
-    um = ((0x80402010 << movePos) | (movePos && (0x08040201 >>> 32 - movePos))) & ((_moveBit & 0xf0f8fcfe) ? 0x0080c0e0 : 0xffffffff);
+        //縦に盤をひっくり返して、左下、下、右下を計算
+        movePos = (movePos & 0b111) | (0b11000 - (movePos & 0b11000));
+        moveBit = 1 << movePos; //ひっくり返した後の手のビット位置
+        let _upperFlip = 0; //もとの盤面で言うと下側のひっくり返る石
+        let _lowerFlip = 0; //同じく上側
 
-    let lt = (lopntFlp | ~lm) + _mb1;
-    ut = (((uopntFlp | ~um) + (b33 || (lt >>> 30) === 0)) & um) ^ (uopntFlp & um);
-    lt = (lt & lm) ^ (lopntFlp & lm);
+        //左斜め前
+        let lm = (0x08040200 << movePos) & ((moveBit & 0xf0f8fcfe) ? 0xf0f8fcfe : 0xffffffff); //下側のマスク
+        um = ((0x80402010 << movePos) | (movePos && (0x08040200 >>> 32 - movePos))) & ((moveBit & 0xf0f8fcfe) ? 0x0080c0e0 : 0xffffffff);
 
-    let t = ut & uplrFlp;
-    _lowerFlip |= t !== 0 ? lt : ((lt & lplrFlp) && (lt & ~lplrFlp));
-    _upperFlip |= t && (ut & ~uplrFlp);
+        let lt = (lopntFlp | ~lm) + 1; //下側のひっくり返る石を計算するときに使う
+        ut = (((uopntFlp | ~um) + ((lt >>> 30) === 0)) & um) ^ (uopntFlp & um);
+        lt = (lt & lm) ^ (lopntFlp & lm);
 
-    lm = 0x01010101 << movePos;
-    um = 0x01010101 << (movePos & 0b111);
+        let t = ut & uplrFlp; //石が置けるかどうかの判定、上側
+        _lowerFlip |= t ? lt : ((lt & lplrFlp) && (lt & ~lplrFlp));
+        _upperFlip |= t && (ut & ~uplrFlp);
 
-    lt = (lopntFlp | ~lm) + _mb1;
-    ut = (((uopntFlp | ~um) + (b33 || (lt >>> 30) === 0)) & um) ^ (uopntFlp & um);
-    lt = (lt & lm) ^ (lopntFlp & lm);
+        //上
+        lm = 0x01010100 << movePos;
+        um = 0x01010101 << (movePos & 0b111);
 
-    t = ut & uplrFlp;
-    _lowerFlip |= t !== 0 ? lt : ((lt & lplrFlp) && (lt & ~lplrFlp));
-    _upperFlip |= t && (ut & ~uplrFlp);
+        lt = (lopntFlp | ~lm) + 1;
+        ut = (((uopntFlp | ~um) + ((lt >>> 30) === 0)) & um) ^ (uopntFlp & um);
+        lt = (lt & lm) ^ (lopntFlp & lm);
 
-    lm = (0x10204081 << movePos) & ((_moveBit & 0x1f3f7ffe) ? 0x1f3f7ffe : ~0x1f3f7ffe);
-    um = ((0x00020408 << movePos) | (movePos && (0x10204081 >>> 32 - movePos))) & ((_moveBit & 0x1f3f7ffe) ? 0x0103070f : ~0x0103070f);
+        t = ut & uplrFlp;
+        _lowerFlip |= t ? lt : ((lt & lplrFlp) && (lt & ~lplrFlp));
+        _upperFlip |= t && (ut & ~uplrFlp);
 
-    lt = (lopntFlp | ~lm) + _mb1;
-    ut = (((uopntFlp | ~um) + (b33 || (lt >>> 30) === 0)) & um) ^ (uopntFlp & um);
-    lt = (lt & lm) ^ (lopntFlp & lm);
+        //右斜め前
+        lm = (0x10204080 << movePos) & ((moveBit & 0x1f3f7ffe) ? 0x1f3f7ffe : ~0x1f3f7ffe);
+        um = ((0x00020408 << movePos) | (movePos && (0x10204080 >>> 32 - movePos))) & ((moveBit & 0x1f3f7ffe) ? 0x0103070f : ~0x0103070f);
 
-    t = ut & uplrFlp;
-    _lowerFlip |= t !== 0 ? lt : ((lt & lplrFlp) && (lt & ~lplrFlp));
-    _upperFlip |= t && (ut & ~uplrFlp);
+        lt = (lopntFlp | ~lm) + 1;
+        ut = (((uopntFlp | ~um) + ((lt >>> 30) === 0)) & um) ^ (uopntFlp & um);
+        lt = (lt & lm) ^ (lopntFlp & lm);
 
-    upperFlip |= (_lowerFlip << 24) | ((_lowerFlip << 8) & 0x00ff0000) | ((_lowerFlip >>> 8) & 0x0000ff00) | (_lowerFlip >>> 24);
-    lowerFlip |= (_upperFlip << 24) | ((_upperFlip << 8) & 0x00ff0000) | ((_upperFlip >>> 8) & 0x0000ff00) | (_upperFlip >>> 24);
+        t = ut & uplrFlp;
+        _lowerFlip |= t ? lt : ((lt & lplrFlp) && (lt & ~lplrFlp));
+        _upperFlip |= t && (ut & ~uplrFlp);
 
-    out_flip.upperFlip = upperFlip;
-    out_flip.lowerFlip = lowerFlip;
-};
+        //縦に反転させているので戻す
+        upperFlip |= (_lowerFlip << 24) | ((_lowerFlip << 8) & 0x00ff0000) | ((_lowerFlip >>> 8) & 0x0000ff00) | (_lowerFlip >>> 24);
+        lowerFlip |= (_upperFlip << 24) | ((_upperFlip << 8) & 0x00ff0000) | ((_upperFlip >>> 8) & 0x0000ff00) | (_upperFlip >>> 24);
 
-Board.flipOnLowerMove = function (uplr, lplr, uopnt, lopnt, uplrFlp, lplrFlp, uopntFlp, lopntFlp, moveBit, out_flip) {
-    let movePos = Utils.bitPosition(moveBit);
-    let mb1 = moveBit << 1;
-    let b33 = mb1 === 0;
-    let upperFlip = 0;
-    let lowerFlip = 0;
+        out_flip.upperFlip = upperFlip;
+        out_flip.lowerFlip = lowerFlip;
+    };
+    //下側に石をおいたときのひっくり返る石を求める
+    Board.flipOnLowerMove = function (uplr, lplr, uopnt, lopnt, uplrFlp, lplrFlp, uopntFlp, lopntFlp, moveBit, out_flip) {
+        let movePos = bitPosition(moveBit);
+        let upperFlip = 0;
+        let lowerFlip = 0;
 
-    let lm = (((0x80808080 - moveBit) & 0x7f7f7f7f) << 1) | moveBit;
-    let lmo = lopnt & lm;
-    let lt = (lmo ^ (lmo + mb1)) & lm;
-    lowerFlip |= (lt & lplr) && (lt & ~lplr);
+        //左
+        let lm = (((0x80808080 - moveBit) & 0x7f7f7f7f) << 1);// | moveBit;
 
-    lm = (0x08040201 << movePos) & ((moveBit & 0xf0f8fcfe) ? 0xf0f8fcfe : 0xffffffff);
-    let um = ((0x80402010 << movePos) | (movePos && (0x08040201 >>> 32 - movePos))) & ((moveBit & 0xf0f8fcfe) ? 0x0080c0e0 : 0xffffffff);
+        let lt = (((lopnt | ~lm) + 1) & lm) ^ (lopnt & lm);
+        lowerFlip |= (lt & lplr) && (lt & ~lplr);
 
-    lt = (lopnt | ~lm) + mb1;
-    let ut = (((uopnt | ~um) + (b33 || (lt >>> 30) === 0)) & um) ^ (uopnt & um);
-    lt = (lt & lm) ^ (lopnt & lm);
+        //左斜め前
+        lm = (0x08040200 << movePos) & ((moveBit & 0xf0f8fcfe) ? 0xf0f8fcfe : 0xffffffff);
+        let um = ((0x80402010 << movePos) | (movePos && (0x08040200 >>> 32 - movePos))) & ((moveBit & 0xf0f8fcfe) ? 0x0080c0e0 : 0xffffffff);
 
-    let t = ut & uplr;
-    lowerFlip |= t !== 0 ? lt : ((lt & lplr) && (lt & ~lplr));
-    upperFlip |= t && (ut & ~uplr);
+        lt = (lopnt | ~lm) + 1;
+        let ut = (((uopnt | ~um) + ((lt >>> 30) === 0)) & um) ^ (uopnt & um);
+        lt = (lt & lm) ^ (lopnt & lm);
 
-    lm = 0x01010101 << movePos;
-    um = 0x01010101 << (movePos & 0b0111);
+        let t = ut & uplr;
+        lowerFlip |= t ? lt : ((lt & lplr) && (lt & ~lplr));
+        upperFlip |= t && (ut & ~uplr);
 
-    lt = (lopnt | ~lm) + mb1;
-    ut = (((uopnt | ~um) + (b33 || (lt >>> 30) === 0)) & um) ^ (uopnt & um);
-    lt = (lt & lm) ^ (lopnt & lm);
+        //上
+        lm = 0x01010100 << movePos;
+        um = 0x01010101 << (movePos & 0b0111);
 
-    t = ut & uplr;
-    lowerFlip |= t !== 0 ? lt : ((lt & lplr) && (lt & ~lplr));
-    upperFlip |= t && (ut & ~uplr);
+        lt = (lopnt | ~lm) + 1;
+        ut = (((uopnt | ~um) + ((lt >>> 30) === 0)) & um) ^ (uopnt & um);
+        lt = (lt & lm) ^ (lopnt & lm);
 
-    lm = (0x10204081 << movePos) & ((moveBit & 0x1f3f7ffe) ? 0x1f3f7ffe : ~0x1f3f7ffe);
-    um = ((0x00020408 << movePos) | (movePos && (0x10204081 >>> 32 - movePos))) & ((moveBit & 0x1f3f7ffe) ? 0x0103070f : ~0x0103070f);
+        t = ut & uplr;
+        lowerFlip |= t ? lt : ((lt & lplr) && (lt & ~lplr));
+        upperFlip |= t && (ut & ~uplr);
 
-    lt = (lopnt | ~lm) + mb1;
-    ut = (((uopnt | ~um) + (b33 || (lt >>> 30) === 0)) & um) ^ (uopnt & um);
-    lt = (lt & lm) ^ (lopnt & lm);
+        //右斜め前
+        lm = (0x10204080 << movePos) & ((moveBit & 0x1f3f7ffe) ? 0x1f3f7ffe : ~0x1f3f7ffe);
+        um = ((0x00020408 << movePos) | (movePos && (0x10204080 >>> 32 - movePos))) & ((moveBit & 0x1f3f7ffe) ? 0x0103070f : ~0x0103070f);
 
-    t = ut & uplr;
-    lowerFlip |= t !== 0 ? lt : ((lt & lplr) && (lt & ~lplr));
-    upperFlip |= t && (ut & ~uplr);
+        lt = (lopnt | ~lm) + 1;
+        ut = (((uopnt | ~um) + ((lt >>> 30) === 0)) & um) ^ (uopnt & um);
+        lt = (lt & lm) ^ (lopnt & lm);
 
-    lmo = lopnt & 0x7e7e7e7e;
-    lt = lmo & (moveBit >>> 1);
-    lt |= lmo & (lt >>> 1);
-    lt |= lmo & (lt >>> 1);
-    lt |= lmo & (lt >>> 1);
-    lt |= lmo & (lt >>> 1);
-    lt |= lmo & (lt >>> 1);
+        t = ut & uplr;
+        lowerFlip |= t ? lt : ((lt & lplr) && (lt & ~lplr));
+        upperFlip |= t && (ut & ~uplr);
 
-    lowerFlip |= ((lt >>> 1) & lplr) && lt;
+        //右 mobilityと大体一緒
+        let lmo = lopnt & 0x7e7e7e7e;
+        lt = lmo & (moveBit >>> 1);
+        lt |= lmo & (lt >>> 1);
+        lt |= lmo & (lt >>> 1);
+        lt |= lmo & (lt >>> 1);
+        lt |= lmo & (lt >>> 1);
+        lt |= lmo & (lt >>> 1);
 
-    movePos = (movePos & 0b0111) | (0b00011000 - (movePos & 0b00011000));
-    let _mb = 1 << movePos;
-    let _mb1 = _mb << 1;
-    let _upperFlip = 0;
-    let _lowerFlip = 0;
+        lowerFlip |= ((lt >>> 1) & lplr) && lt;
 
-    um = (0x08040201 << movePos) & ((_mb & 0xf0f0f0f0) ? 0xf0f0f0f0 : 0xffffffff);
-    ut = (((uopntFlp | ~um) + _mb1) & um) ^ (uopntFlp & um);
+        //縦に盤をひっくり返して、左下、下、右下を計算
+        movePos = (movePos & 0b0111) | (0b00011000 - (movePos & 0b00011000));
+        moveBit = 1 << movePos;
+        let _upperFlip = 0;
+        let _lowerFlip = 0;
 
-    _upperFlip |= (ut & uplrFlp) && (ut & ~uplrFlp);
+        //左斜め前
+        um = (0x08040200 << movePos) & ((moveBit & 0xf0f0f0f0) ? 0xf0f0f0f0 : 0xffffffff);
+        ut = (((uopntFlp | ~um) + 1) & um) ^ (uopntFlp & um);
 
-    um = 0x01010101 << movePos;
-    ut = (((uopntFlp | ~um) + _mb1) & um) ^ (uopntFlp & um);
+        _upperFlip |= (ut & uplrFlp) && (ut & ~uplrFlp);
 
-    _upperFlip |= (ut & uplrFlp) && (ut & ~uplrFlp);
+        //上
+        um = 0x01010100 << movePos;
+        ut = (((uopntFlp | ~um) + 1) & um) ^ (uopntFlp & um);
 
-    um = (0x00204081 << movePos) & ((_mb & 0x0f0f0f0f) ? 0x0f0f0f0f : 0xffffffff);
-    ut = (((uopntFlp | ~um) + _mb1) & um) ^ (uopntFlp & um);
+        _upperFlip |= (ut & uplrFlp) && (ut & ~uplrFlp);
 
-    _upperFlip |= (ut & uplrFlp) && (ut & ~uplrFlp);
+        //右斜め前
+        um = (0x00204080 << movePos) & ((moveBit & 0x0f0f0f0f) ? 0x0f0f0f0f : 0xffffffff);
+        ut = (((uopntFlp | ~um) + 1) & um) ^ (uopntFlp & um);
 
-    upperFlip |= (_lowerFlip << 24) | ((_lowerFlip << 8) & 0x00ff0000) | ((_lowerFlip >>> 8) & 0x0000ff00) | (_lowerFlip >>> 24);
-    lowerFlip |= (_upperFlip << 24) | ((_upperFlip << 8) & 0x00ff0000) | ((_upperFlip >>> 8) & 0x0000ff00) | (_upperFlip >>> 24);
+        _upperFlip |= (ut & uplrFlp) && (ut & ~uplrFlp);
 
-    out_flip.upperFlip = upperFlip;
-    out_flip.lowerFlip = lowerFlip;
-};
+        //縦に反転させているので戻す
+        upperFlip |= (_lowerFlip << 24) | ((_lowerFlip << 8) & 0x00ff0000) | ((_lowerFlip >>> 8) & 0x0000ff00) | (_lowerFlip >>> 24);
+        lowerFlip |= (_upperFlip << 24) | ((_upperFlip << 8) & 0x00ff0000) | ((_upperFlip >>> 8) & 0x0000ff00) | (_upperFlip >>> 24);
+
+        out_flip.upperFlip = upperFlip;
+        out_flip.lowerFlip = lowerFlip;
+    };
+
+}
