@@ -16,6 +16,25 @@
     let ai_comment = document.getElementById("ai-comment");
 
     window.onload = function() {
+        // test
+
+        // let b = new Board();
+        
+        // let bs = "---XXXX-X-XXXO--XXOXOO--XXXOXO--XXOXXO---OXXXOO-O-OOOO------OO--";
+        // for (let i = 0; i < bs.length; i++) {
+        //     b.setState(bs[i] === "O" ? GridState.white : bs[i] === "X" ? GridState.black : GridState.empty, i & 7, i >>> 3);
+        // }
+        
+        // b.print();
+        
+        // let solver = new ReversiSolver(b, Player.black);
+        // let m = solver.solve();
+        
+        // console.log("最終石差:" + m.result);
+        // console.log("最善手:" + "abcdefgh"[m.h] + (m.v + 1));
+        // console.log("タイム:" + m.time / 1000 + "秒");
+
+        // end test
         let currentBoard = reversi.getCurrentBoard();
 
         BoardRenderer.update(currentBoard, -1, -1);

@@ -1,6 +1,6 @@
 {
     const popCount64 = Utils.popCount64;
-    const bitPosition = Utils.bitPosition;
+    const tzcnt = Utils.tzcnt;
     const flipOnUpperMove = Board.flipOnUpperMove;
     const flipOnLowerMove = Board.flipOnLowerMove;
     const mobility = Board.mobility;
@@ -320,7 +320,7 @@
             let lowerMobility = temp.lowerMobility;
 
             let moveBit = upperMobility & -upperMobility;
-            let bestMove = bitPosition(moveBit);
+            let bestMove = tzcnt(moveBit);
             let bestScore = -64;
             while (moveBit !== 0) {
                 flipOnUpperMove(uplr, lplr, uopnt, lopnt, uplrFlp, lplrFlp, uopntFlp, lopntFlp, moveBit, temp);
@@ -329,7 +329,7 @@
 
                 let score = -evaluateFutureBoards(uopnt ^ uflip, lopnt ^ lflip, (uplr ^ uflip) | moveBit, lplr ^ lflip, -64, -bestScore, false);
                 if (score > bestScore) {
-                    bestMove = bitPosition(moveBit);
+                    bestMove = tzcnt(moveBit);
                     bestScore = score;
                 }
 
@@ -345,7 +345,7 @@
 
                 let score = -evaluateFutureBoards(uopnt ^ uflip, lopnt ^ lflip, uplr ^ uflip, (lplr ^ lflip) | moveBit, -64, -bestScore, false);
                 if (score > bestScore) {
-                    bestMove = bitPosition(moveBit) + 32;
+                    bestMove = tzcnt(moveBit) + 32;
                     bestScore = score;
                 }
 

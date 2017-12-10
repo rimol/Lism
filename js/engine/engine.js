@@ -275,7 +275,7 @@
                 let lowerMobility = temp.lowerMobility;
 
                 let moveBit = upperMobility & -upperMobility;
-                let bestMove = Utils.bitPosition(moveBit);
+                let bestMove = Utils.tzcnt(moveBit);
                 let bestScore = 0x80000000 | 0;
                 while (moveBit !== 0) {
                     Board.flipOnUpperMove(uplr, lplr, uopnt, lopnt, uplrFlp, lplrFlp, uopntFlp, lopntFlp, moveBit, temp);
@@ -284,7 +284,7 @@
 
                     let score = -evaluateFutureBoards(uopnt ^ uflip, lopnt ^ lflip, (uplr ^ uflip) | moveBit, lplr ^ lflip, depth, 0x80000000 | 0, -bestScore);
                     if (score > bestScore) {
-                        bestMove = Utils.bitPosition(moveBit);
+                        bestMove = Utils.tzcnt(moveBit);
                         bestScore = score;
                     }
 
@@ -300,7 +300,7 @@
 
                     let score = -evaluateFutureBoards(uopnt ^ uflip, lopnt ^ lflip, uplr ^ uflip, (lplr ^ lflip) | moveBit, depth, 0x80000000 | 0, -bestScore);
                     if (score > bestScore) {
-                        bestMove = Utils.bitPosition(moveBit) + 32;
+                        bestMove = Utils.tzcnt(moveBit) + 32;
                         bestScore = score;
                     }
 
