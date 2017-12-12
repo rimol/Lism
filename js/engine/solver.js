@@ -34,6 +34,9 @@
                 let uopntFlp = (lopnt << 24) | ((lopnt << 8) & 0x00ff0000) | ((lopnt >>> 8) & 0x0000ff00) | (lopnt >>> 24);
                 let lopntFlp = (uopnt << 24) | ((uopnt << 8) & 0x00ff0000) | ((uopnt >>> 8) & 0x0000ff00) | (uopnt >>> 24);
 
+                ++internalNodeCount;
+                ++leafCount;
+
                 if (upperMoveBit !== 0) {
                     flipOnUpperMove(uplr, lplr, uopnt, lopnt, uplrFlp, lplrFlp, uopntFlp, lopntFlp, upperMoveBit, temp);
                     if ((temp.upperFlip | temp.lowerFlip) === 0) {
@@ -67,9 +70,11 @@
             let lpMobility = temp.lowerMobility;
 
             if ((upMobility | lpMobility) === 0) {
-                return passed ? pCount - oCount
+                return passed ? (++leafCount, pCount - oCount)
                     : -evaluateFinalBoards(uopnt, lopnt, uplr, lplr, -max, -min, true);
             }
+
+            ++internalNodeCount;
 
             let uplrFlp = (lplr << 24) | ((lplr << 8) & 0x00ff0000) | ((lplr >>> 8) & 0x0000ff00) | (lplr >>> 24);
             let lplrFlp = (uplr << 24) | ((uplr << 8) & 0x00ff0000) | ((uplr >>> 8) & 0x0000ff00) | (uplr >>> 24);
@@ -159,9 +164,11 @@
             let lpMobility = temp.lowerMobility;
 
             if ((upMobility | lpMobility) === 0) {
-                return passed ? pCount - oCount
+                return passed ? (++leafCount, pCount - oCount)
                     : -evaluateFutureBoards(uopnt, lopnt, uplr, lplr, -beta, -alpha, true);
             }
+
+            ++internalNodeCount;
 
             let upperBound = 64;
             let lowerBound = -64;
@@ -304,8 +311,6 @@
         };
 
         this.solve = function () {
-            let startTime = Date.now();
-            
             let uplr = player === Player.black ? board.upperBlack : board.upperWhite;
             let lplr = player === Player.black ? board.lowerBlack : board.lowerWhite;
             let uopnt = -player === Player.black ? board.upperBlack : board.upperWhite;
@@ -314,6 +319,8 @@
             let lplrFlp = (uplr << 24) | ((uplr << 8) & 0x00ff0000) | ((uplr >>> 8) & 0x0000ff00) | (uplr >>> 24);
             let uopntFlp = (lopnt << 24) | ((lopnt << 8) & 0x00ff0000) | ((lopnt >>> 8) & 0x0000ff00) | (lopnt >>> 24);
             let lopntFlp = (uopnt << 24) | ((uopnt << 8) & 0x00ff0000) | ((uopnt >>> 8) & 0x0000ff00) | (uopnt >>> 24);
+
+            let startTime = Date.now();
 
             mobility(uplr, lplr, uopnt, lopnt, temp);
             let upperMobility = temp.upperMobility;
@@ -355,6 +362,9 @@
 
             return {
                 result: bestScore,
+                internal: internalNodeCount,
+                leaf: leafCount,
+                all: internalNodeCount + leafCount,
                 time: Date.now() - startTime,
                 h: 7 - bestMove & 7,
                 v: 3 - ((bestMove >>> 3) & 3) + (bestMove >>> 5) * 4

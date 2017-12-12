@@ -14,13 +14,14 @@
     let player_stone_count = document.getElementById("player-stone-count");
     let ai_stone_count = document.getElementById("ai-stone-count");
     let ai_comment = document.getElementById("ai-comment");
+    let log = document.getElementById("log");
 
     window.onload = function() {
         // test
 
         // let b = new Board();
         
-        // let bs = "---XXXX-X-XXXO--XXOXOO--XXXOXO--XXOXXO---OXXXOO-O-OOOO------OO--";
+        // let bs = "O--OOOOX-OOOOOOXOOXXOOOXOOXOOOXXOOOOOOXX---OOOOX----O--X--------";
         // for (let i = 0; i < bs.length; i++) {
         //     b.setState(bs[i] === "O" ? GridState.white : bs[i] === "X" ? GridState.black : GridState.empty, i & 7, i >>> 3);
         // }
@@ -29,6 +30,8 @@
         
         // let solver = new ReversiSolver(b, Player.black);
         // let m = solver.solve();
+
+        // alert(m.all / m.time * 1000);
         
         // console.log("最終石差:" + m.result);
         // console.log("最善手:" + "abcdefgh"[m.h] + (m.v + 1));
@@ -58,6 +61,8 @@
 
         player_stone_count.innerHTML = (PlayerInfo.stone === Player.black ? currentBoard.getBlackCount() : currentBoard.getWhiteCount()) + "石";
         ai_stone_count.innerHTML = (AIInfo.stone === Player.black ? currentBoard.getBlackCount() : currentBoard.getWhiteCount()) + "石";
+
+        log.innerHTML = "棋譜: " + reversi.recode + "\n";
     };
 
     BoardRenderer.setCallbackOnRenderingFinished(function () {
@@ -72,6 +77,7 @@
             setTimeout(function () {
                 main(move.h, move.v);
                 ai_comment.innerHTML = conankun.comment || "";
+                log.innerHTML += "NPS: " + (conankun.nps | 0) + "k\n";
             }, 250 - Date.now() + startTime);
         }
     });

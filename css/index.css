@@ -33,6 +33,19 @@
     margin: 10px auto;
 }
 
+#log {
+    position: relative;
+    width: 500px;
+    height: 100px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 10px auto;
+    color: white;
+    word-wrap: break-word;
+}
+
 .status {
     float: left;
     width: 250px;

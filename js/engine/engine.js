@@ -254,6 +254,7 @@
         constructor(ownStone) {
             this.ownStone = ownStone;
             this.comment = "";
+            this.nps = NaN;
         }
 
         determineNextMove(board) {
@@ -325,6 +326,8 @@
                 else {
                     this.comment = -result.result + "石差で負ける...妙だな";
                 }
+
+                this.nps = result.all / result.time;
 
                 return result;
             }
