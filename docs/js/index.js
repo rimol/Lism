@@ -1,10 +1,10 @@
 ﻿let AI = (function () {
     // お借りしました: http://d.hatena.ne.jp/tshino/20180106/1515218776
     function newWorkerViaBlob(relativePath) {
-        let baseURL = window.location.href.replace(/\\/g, '/').replace(/\/[^\/]*$/, '/');
-        let array = ['importScripts("' + baseURL + relativePath + '");'];
-        let blob = new Blob(array, { type: 'text/javascript' });
-        let url = window.URL.createObjectURL(blob);
+        var baseURL = window.location.href.replace(/\\/g, '/').replace(/\/[^\/]*$/, '/');
+        var array = ['importScripts("' + baseURL + relativePath + '");'];
+        var blob = new Blob(array, {type: 'text/javascript'});
+        var url = window.URL.createObjectURL(blob);
         return new Worker(url);
     };
 
@@ -13,21 +13,16 @@
             let engine;
 
             if (pos.count_of(Player.black) + pos.count_of(Player.white) < 44) {
-                // デバッグごとにいちいちeval.jsとengine.jsをコンパイルするのはめんどくさいので、ここではWebWorkerを使っていない。
-                // let e = new ReversiEngine(4);
-                // let result = e.think(pos.bb[pos.player].bits[1], pos.bb[pos.player].bits[0], pos.bb[pos.player ^ 1].bits[1], pos.bb[pos.player ^ 1].bits[0]);
-                // callback(result);
-                // return;
-
-                engine = newWorkerViaBlob("engine_compiled.js");
+                engine = newWorkerViaBlob("/js/engine.js");
                 engine.addEventListener("message", res => {
                     let result = res.data;
 
                     callback(result);
                 });
             }
+            // 残り20手以下になると完全読みをする
             else {
-                engine = newWorkerViaBlob("solver_compiled.js");
+                engine = newWorkerViaBlob("/js/solver.js");
                 engine.addEventListener("message", res => {
                     let result = res.data;
 
@@ -49,7 +44,7 @@
     let current_game = new Reversi();
 
     current_game.onPass(function () {
-        alert("pass!");
+        alert("Pass!");
     });
 
     current_game.onGameFinished(function () {
@@ -123,22 +118,19 @@
                 : "引き分けって分かってしもたんでんがな"
         }
         else {
-            comment = result > 100 ? "真実はいつもひとつ！"
-                : result > 60 ? "謎は全て解けた！"
-                : result > 20 ? "迷宮なしの名探偵です"
-                : result > 10 ? "（ニンマリ）"
-                : result > -10 ? "いい試合だねー！"
-                : result > -20 ? "あれれーっ...."
-                : result > -60 ? "おっかしいぞ～？？？"
-                : result > -100 ? "マズイな..."
-                : "バーロー、もっと手加減してください";
-
-            //comment += ` (評価値:${result})`
+            comment = result > 100 ? "あまりに先が見えすぎて実質万物が透明"
+                : result > 60 ? "ありがとう、君とアリエール"
+                : result > 20 ? "あんまりうまくないですね！"
+                : result > 10 ? "あれ？いいんですか？（煽り）"
+                : result > -10 ? "互角ですね！"
+                : result > -20 ? "？"
+                : result > -60 ? "何故何故何故何故何故何故何故何故何故"
+                : result > -100 ? "マズいです..."
+                : "ｱ";
         }
 
-        comment += "\n";
         let nps = move["nodes"] / move["elapsed"] * 1000 | 0;
-        comment += `${nps} nodes/s`;
+        console.log(`${nps} nodes/s`);
 
         players[current_game.player].showMessage(comment);
 
@@ -163,7 +155,7 @@
     });
 
     this["startGame"] = () => {
-        // runBenchmark();
+        runBenchmark();
 
         current_game.reset();
 

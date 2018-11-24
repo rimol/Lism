@@ -4,14 +4,14 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>リバーシ</title>
+    <title>Reversi</title>
     <link rel="stylesheet" type="text/css" href="css/index.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 </head>
 
 <body id="reversi">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand mb-0 h1">Conankun-Reversi</a>
+        <a class="navbar-brand mb-0 h1">Reversi</a>
         <div class="navbar-nav">
             <a class="nav-item nav-link" href="https://github.com/coonankun/ConankunReversi">GitHub</a>
         </div>
@@ -28,7 +28,7 @@
                 </div>
                 <select id="type1" class="custom-select">
                     <option value="0" selected>人間</option>
-                    <option value="1">某名探偵（コンピュータ）</option>
+                    <option value="1">コンピュータ</option>
                 </select>
                 <p id="message1"></p>
             </div>
@@ -41,7 +41,7 @@
                 </div>
                 <select id="type2" class="custom-select">
                     <option value="0" selected>人間</option>
-                    <option value="1">某名探偵（コンピュータ）</option>
+                    <option value="1">コンピュータ</option>
                 </select>
                 <p id="message2"></p>
             </div>
@@ -49,7 +49,7 @@
 
         <div id="reversi-board">
             <div id="column-label-box">
-                <div class="column-label"></div>
+                <div id="column-label-corner"></div>
                 <div class="column-label">
                     <b>A</b>
                 </div>
@@ -121,7 +121,7 @@
     </div>
 
     <footer id="footer">
-        <p>&#169; 2018 conan-kun(<a href="https://twitter.com/coonankun">@coonankun</a>)
+        <p>&#169; 2018 りも(<a href="https://twitter.com/_rimol">@_rimol</a>)
         </p>
     </footer>
 
@@ -129,10 +129,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 
-    <script src="solver_compiled.js"></script>
-    <script src="engine_compiled.js"></script>
-    <script src="reversi_compiled.js"></script>
-    
+    <script src="js/bitboard.js"></script>
+    <script src="js/reversi.js"></script>
+    <script src="js/render.js"></script>
+    <!-- <script src="js/eval.js"></script> -->
+    <script src="js/engine.js"></script>
+    <script src="js/solver.js"></script>
+    <script src="js/benchmark.js"></script>
+    <script src="js/index.js"></script>
 </body>
 
 </html>

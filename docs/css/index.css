@@ -5,7 +5,7 @@
 #player1, #player2 {
     float: left;
 
-    width: 170px;
+    width: 152px;
 
     margin-left: auto;
     margin-right: auto;
@@ -16,8 +16,8 @@
 }
 
 #status-box {
-    height: 160px;
-    width: 380px;
+    height: 140px;
+    width: 345px;
     margin: 10px auto;
 
     padding: 10px;
@@ -32,10 +32,10 @@
 #reversi-board {
     margin: 10px auto;
 
-    background-color: rgb(255, 219, 219);
+    background-color: transparent;
 
-    width: 380px;
-    height: 365px;
+    width: 345px;
+    height: 350px;
 }
 
 #canvas-gameboard {
@@ -45,8 +45,8 @@
 
 .column-label {
     width: 40px;
-    height: 20px;
-    background-color: rgb(255, 219, 219);
+    height: 25px;
+    background-color: transparent;
     color: black;
 
     text-align: center;
@@ -54,18 +54,26 @@
     float: left;
 }
 
+#column-label-corner {
+    width: 20px;
+    height: 25px;
+    background-color: transparent;
+    
+
+    float: left;
+}
+
 .row-label {
-    width: 40px;
+    width: 20px;
     height: 40px;
-    background-color: rgb(255, 219, 219);
+    background-color: transparent;
     color: black;
-    text-align: right;
-    padding-right: 15px;
+    text-align: center;
     padding-top: 7px;
 }
 
 #column-label-box {
-    height: 30px;
+    height: 25px;
 }
 
 #row-label-box {
@@ -75,7 +83,7 @@
 #buttons {
     margin: 10px auto;
 
-    width: 380px;
+    width: 345px;
     height: 50px;
 }
 
@@ -88,7 +96,7 @@
 }
 
 #start-button {
-    margin-left: 100px;
+    margin-left: 70px;
 }
 
 .status {
@@ -107,14 +115,14 @@
 }
 
 #recode {
-    width: 380px;
+    width: 345px;
     height: 70px;
 
     margin: 5px auto;
 }
 
 #recode-str{
-    width: 280px;
+    width: 250px;
     float: left;
 
     margin: 0px 5px;
