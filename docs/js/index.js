@@ -155,7 +155,7 @@
     });
 
     this["startGame"] = () => {
-        runBenchmark();
+        // runBenchmark();
 
         current_game.reset();
 
