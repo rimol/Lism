@@ -1,246 +1,209 @@
-let Player = {
-    black: 0,
-    white: 1
-};
-
 let SquareState = {
-    black: 0,
-    white: 1,
-    blank: -1
+    empty: 0,
+    black: 1,
+    white: 2,
 };
 
-class Undo {
-    constructor(flip_bb, sq, passed) {
-        // 盤面描画のときに、Bitboard以外のオブジェクトだと困るのでチェックを挟む
-        if (!(flip_bb instanceof Bitboard)) {
-            throw new TypeError("flip_bbはBitboardクラスのインスタンスである必要があります");
-        }
+let Player = {
+    black: 1,
+    white: 2,
+}
 
-        this.flip_bb = flip_bb;
-        this.sq = sq;
-        this.passed = passed;
+// 黒白を反転する
+function flipState(sqstate) {
+    return sqstate ^= 3;
+}
+
+/* (x, y)
+  A      B C D E F G H
+1 (0, 0)             (7, 0)
+2
+3
+4
+5
+6
+7
+8
+ */
+function boardIndex(x, y) {
+    return y * 8 + x;
+}
+
+// 返ってきた配列の長さが0ならillegalMove
+function getFlip(board, x, y, color) {
+    // (x, y) が (i, j)方向の向きで一番端ならtrueを返す
+    function endOfLine(x, y, i, j) {
+        // 一つ進めて盤の外に出ればtrue.
+        return !(0 <= (x + i) && (x + i) < 8)
+            || !(0 <= (y + j) && (y + j) < 8);
     }
+
+    let flip = [];
+    for (let i = -1; i <= 1; ++i) {
+        for (let j = -1; j <= 1; ++j) {
+            if (i === 0 && j === 0) continue;
+
+            let cand = [];
+            let tx = x + i;
+            let ty = y + j;
+            while (!endOfLine(tx, ty, i, j)) {
+                if (board[boardIndex(tx, ty)] !== flipState(color)) {
+                    break;
+                }
+
+                cand.push(boardIndex(tx, ty));
+                tx += i; ty += j;
+            }
+
+            if (board[boardIndex(tx, ty)] === color) {
+                flip = flip.concat(cand);
+            }
+        }
+    }
+    return flip;
 }
 
 class Reversi {
-    constructor() {
-        this.player = Player.black;
-        this.is_finished = false;
-        this.recode = "";
+    constructor(recordStr) {
+        this.player = SquareState.black;
+        this.isOver = false;
+        this.record = [];
 
-        // [0]: 黒 [1]: 白
-        this.bb = [new Bitboard(), new Bitboard()];
+        // 普通に配列でもちます
+        this.board = Array(64);
+        // 定義してね
+        this.board.fill(SquareState.empty);
+        this.board[boardIndex(3, 4)] = this.board[boardIndex(4, 3)] = SquareState.black;
+        this.board[boardIndex(3, 3)] = this.board[boardIndex(4, 4)] = SquareState.white;
 
-        this.mobility_bb = new Bitboard(); 
-
-        this.undo_stack = [];
-        this.redo_stack = [];
-
-        this._onPass = () => { };
-        this._onGameFinished = () => { };
+        // 「最初に石を打った位置、そのあとにひっくり返った石の位置をもつ配列」の配列
+        this.undoStack = [];
+        this.redoStack = [];
     }
 
-    // 新しくゲームを開始するときに必ず呼ぶ    
-    reset() {
-        this.player = Player.black;
-        this.is_finished = false;
-        this.recode = "";
+    loadRecord(recordStr) {
+        if (typeof recordStr !== "string") {
+            throw "棋譜は文字列やぞ";
+        }
 
-        // 初期配置をセット
-        this.bb[0].set(0x00000008, 0x10000000);
-        this.bb[1].set(0x00000010, 0x08000000);
+        if (recordStr.length === 0 || recordStr.length % 2 === 1) {
+            throw "不正な棋譜データ";
+        }
 
-        this.mobility_bb.set(0, 0);
-        this.updateMobility();
+        for (let i = 0; i < recordStr.length; i += 2) {
+            let x = "abcdefghABCDEFGH".indexOf(recordStr[i]);
+            let y = "12345678".indexOf(recordStr[i + 1]);
 
-        this.undo_stack.length = this.redo_stack.length = 0;
+            if (x === -1 || y === -1) {
+                throw "不正な棋譜データ";
+            }
+
+            x %= 8;
+
+            if (!this.isLegalMove(x, y, this.player)) {
+                throw "不正な棋譜データ";
+            }
+
+            this.move(x, y);
+        }
     }
 
-    // ベンチマーク用。適当
-    loadFFO(ffo, turn) {
-        this.player = turn;
+    // ひっくり返るアニメーションにつかうよ
+    getLastFlip() {
+        let l = this.undoStack.length;
+        return l > 0 ? this.undoStack[l - 1] : [];
+    }
 
-        this.bb[0].set(0, 0);
-        this.bb[1].set(0, 0);
+    getSquareState(x, y) {
+        return this.board[boardIndex(x, y)];
+    }
 
-        for (let i = 0; i < 64; ++i) {
-            if (ffo[i] !== "-") {
-                let c = ffo[i];
-                let p = ffo[i] == "X" ? Player.black : Player.white;
+    getStoneCount(color) {
+        let cnt = 0;
+        for (let i = 0; i < this.board.length; ++i) {
+            if (this.board[i] === color)++cnt;
+        }
+        return cnt;
+    }
 
-                this.bb[p] = this.bb[p].or(square_to_bb(i));
+    isLegalMove(x, y, color) {
+        return this.getSquareState(x, y) === SquareState.empty && getFlip(this.board, x, y, color).length > 0;
+    }
+
+    // sqにcolorの石を置き、flipの位置にある石をひっくり返し、手番を変更する
+    _doFlip(color, sq, flip) {
+        this.board[sq] = color;
+        flip.forEach(sqf => {
+            this.board[sqf] = flipState(this.board[sqf]);
+        });
+        this.player = flipState(this.player);
+    }
+
+    noLegalMoveExists(color) {
+        for (let y = 0; y < 8; ++y) {
+            for (let x = 0; x < 8; ++x) {
+                if (this.getSquareState(x, y) !== SquareState.empty) continue;
+
+                if (this.isLegalMove(x, y, color)) return false;
             }
         }
 
-        // あとで消す
-        this.bb[0].print();
-        this.bb[1].print();
+        return true;
     }
 
-    // こちらは丁寧に実装する。
-    loadRecode(recode_str) {
-        if (!recode_str) return;
-
-        this.reset();
-
-        // 小文字化
-        recode_str = (recode_str.toString() || "").toLowerCase();
-
-        let len = recode_str.length;
-
-        for (let i = 0; i < len && i + 1 < len; i += 2) {
-            let x = "abcdefgh".indexOf(recode_str[i]);
-            let y = "12345678".indexOf(recode_str[i + 1]);
-
-            if (x === -1 || y === -1) break;
-
-            if (!this.can_put_at(x, y)) break;
-
-            // 手を進めていく
-            this.putAt(x, y);
-        }
-    }
-
-    // 打てるところの計算と、パスor終局判定もついでにやる
-    updateMobility() {
-        let mobility = {};
-
-        let player_bb = this.bitboard_of(this.player);
-        let opponent_bb = this.bitboard_of(this.player ^ 1);
-
-        BitboardUtils.mobility(player_bb.bits[1], player_bb.bits[0], opponent_bb.bits[1], opponent_bb.bits[0], mobility);
-
-        this.mobility_bb.set(mobility.mob1, mobility.mob0);
-
-        if (this.mobility_bb.none()) {
-            BitboardUtils.mobility(opponent_bb.bits[1], opponent_bb.bits[0], player_bb.bits[1], player_bb.bits[0], mobility);
-
-            this.mobility_bb.set(mobility.mob1, mobility.mob0);
-
-            if (this.mobility_bb.none()) {
-                // 終局
-                this.is_finished = true;
-
-                this._onGameFinished();
+    passOrFinishGameIfNeeded() {
+        let c = this.player;
+        let passed = false;
+        while (true) {
+            if (this.noLegalMoveExists(c)) {
+                if (passed) {
+                    this.isOver = true;
+                    return;
+                }
+                else {
+                    c = flipState(c);
+                    passed = true;
+                }
             }
-            else {
-                this.player ^= 1;
-
-                // パスのときもスタックに情報を追加する。
-                this.undo_stack.unshift(new Undo(new Bitboard(), -1, true));
-
-                this._onPass();
-            }
+            else return;
         }
     }
 
-    bitboard_of(turn) {
-        return this.bb[turn];
-    }
+    move(x, y) {
+        let flip = getFlip(this.board, x, y, this.player);
+        if (flip.length === 0) return;
 
-    last_flip() {
-        return this.undo_stack.length ? this.undo_stack[0] : new Undo(new Bitboard(), -1, false);
-    }
+        this._doFlip(this.player, boardIndex(x, y), flip);
 
-    stone_at(x, y) {
-        let sq = x + y * 8;
+        flip.unshift(boardIndex(x, y));
+        this.undoStack.push(flip);
 
-        return (this.bb[Player.white].test(sq) << 1 | this.bb[Player.black].test(sq)) - 1;
-    }
-
-    count_of(turn) {
-        return this.bb[turn].pop_count();
-    }
-
-    can_put_at(x, y) {
-        return this.mobility_bb.test(x + y * 8);
-    }
-
-    putAt(x, y) {
-        if (!this.can_put_at(x, y)) return;
-
-        let p = this.player, o = this.player ^ 1;
-
-        // clear
-        this.redo_stack.length = 0;
-
-        let player_bb = this.bb[p];
-        let opponent_bb = this.bb[o];
-
-        let flip = {};
-        let sq = x + y * 8;
-
-        if (sq < 32) {
-            BitboardUtils.flip0(player_bb.bits[1], player_bb.bits[0], opponent_bb.bits[1], opponent_bb.bits[0], 1 << sq, flip);
-        }
-        else {
-            BitboardUtils.flip1(player_bb.bits[1], player_bb.bits[0], opponent_bb.bits[1], opponent_bb.bits[0], 1 << sq - 32, flip);
-        }
-
-        let flip_bb = (new Bitboard()).set(flip.f1, flip.f0);
-
-        this.bb[p] = player_bb.xor(flip_bb).xor(square_to_bb(sq));
-        this.bb[o] = opponent_bb.xor(flip_bb);
-
-        this.undo_stack.unshift(new Undo(flip_bb, sq, false));
-
-        // 手番変更処理
-        this.player ^= 1;
-        this.updateMobility();
-
-        this.recode += "abcdefgh"[x] + (y + 1);
+        // 別の世界線はclear
+        this.redoStack.length = 0;
+        this.passOrFinishGameIfNeeded();
     }
 
     undo() {
-        if (this.undo_stack.length === 0) return;
+        let flip = this.undoStack.pop();
+        if (typeof flip === "undefined") return;
 
-        let undo_data = this.undo_stack.shift();
+        let sq = flip.pop();
+        this._doFlip(SquareState.empty, sq, flip);
 
-        this.player ^= 1;
-        let p = this.player, o = this.player ^ 1;
-
-        this.bb[p] = this.bb[p].xor(undo_data.flip_bb).xor(square_to_bb(undo_data.sq));
-        this.bb[o] = this.bb[o].xor(undo_data.flip_bb);
-
-        this.redo_stack.unshift(undo_data);
-        
-        // ここでupdateMobilityを呼び出すと、パスのときに手番が交代してパスの局面以前に戻れなくなる。
-        let mobility = {};
-        BitboardUtils.mobility(this.bb[p].bits[1], this.bb[p].bits[0], this.bb[o].bits[1], this.bb[o].bits[0], mobility);
-
-        this.mobility_bb.set(mobility.mob1, mobility.mob0);
+        flip.unshift(sq);
+        this.redoStack.push(flip);
+        this.passOrFinishGameIfNeeded();
     }
 
     redo() {
-        if (this.redo_stack.length === 0) return;
+        let flip = this.redoStack.pop();
+        if (typeof flip === "undefined") return;
 
-        let redo_data = this.redo_stack.shift();
+        let sq = flip.pop();
+        this._doFlip(this.player, sq, flip);
 
-        this.player ^= 1;
-        let p = this.player, o = this.player ^ 1;
-
-        this.bb[o] = this.bb[o].xor(redo_data.flip_bb).xor(square_to_bb(redo_data.sq));
-        this.bb[p] = this.bb[p].xor(redo_data.flip_bb);
-
-        this.undo_stack.unshift(redo_data);
-
-        let mobility = {};
-        BitboardUtils.mobility(this.bb[p].bits[1], this.bb[p].bits[0], this.bb[o].bits[1], this.bb[o].bits[0], mobility);
-
-        this.mobility_bb.set(mobility.mob1, mobility.mob0);
-    }
-
-    // コールバック設定用関数。
-    onPass(func) {
-        if (typeof func === "function") {
-            this._onPass = func;
-        }
-    }
-
-    // コールバック設定用関数。    
-    onGameFinished(func) {
-        if (typeof func === "function") {
-            this._onGameFinished = func;
-        }
+        flip.unshift(sq);
+        this.undoStack.push(flip);
+        this.passOrFinishGameIfNeeded();
     }
 }

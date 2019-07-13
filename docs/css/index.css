@@ -1,5 +1,5 @@
 #reversi {
-    background: rgb(255, 246, 246);
+    background: rgb(228, 255, 240);
 }
 
 #player1, #player2 {
@@ -13,6 +13,15 @@
     text-align: center;
 
     margin: 0 5px;
+}
+
+#com-status-box, #human-status-box {
+    width: 351px;
+    margin: auto;
+}
+
+#com-status-box {
+    text-align: right;
 }
 
 #status-box {
@@ -34,13 +43,13 @@
 
     background-color: transparent;
 
-    width: 345px;
-    height: 350px;
+    width: 351px;
+    height: 351px;
 }
 
 #canvas-gameboard {
-    width: 320px;
-    height: 320px;
+    width: 351px;
+    height: 351px;
 }
 
 .column-label {

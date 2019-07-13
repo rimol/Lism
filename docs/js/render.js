@@ -2,140 +2,133 @@
 
 let BoardCanvas = (function () {
     let onRenderingFinished = function () { };
-    let onCanvasClicked = function() {};
+    let onTryingToPlaceStoneAt = function () { };
 
     const canvas = document.getElementById("canvas-gameboard");
     const context = canvas.getContext("2d");
 
-    const board_size = canvas.clientWidth;
-    const grid_size = Math.floor(board_size / 8);
+    // みためのサイズ、内部的にはこれの2倍の大きさがある.
+    const CanvasSize = canvas.clientWidth;
+    const GridSize = 40;
+    const IndexGridSize = 30;
 
-    const stone_image = new Image();
-    const image_size = 80;
-    stone_image.src = "img/stones_80.png";
+    const RowHeader = '12345678';
+    const ColumnHeader = 'ABCDEFGH';
 
-    const recursion = 7;
+    const StoneImage = new Image();
+    const StoneImageSize = 80;
+    StoneImage.src = "img/stones_80.png";
 
     canvas.addEventListener("mouseup", e => {
         let rect = canvas.getBoundingClientRect();
-        onCanvasClicked(Math.floor((e.x - rect.left) / grid_size), Math.floor((e.y - rect.top) / grid_size));
+        let x = Math.floor((e.x - rect.left - IndexGridSize) / GridSize);
+        let y = Math.floor((e.y - rect.top - IndexGridSize) / GridSize);
+        onTryingToPlaceStoneAt(x, y);
     });
 
-    // phaseが0になるまで再帰する
-    function render(reversi, phase) {
-        // リセット
+    // 0-indexedで数えてx本目、y本目のグリッド線の交点を塗る
+    function renderPoint(x, y) {
+        context.beginPath();
+        context.arc(IndexGridSize + x * GridSize, IndexGridSize + y * GridSize, 3, 0, 2 * Math.PI, true);
+        context.fill();
+    }
+
+    function renderBoardExceptStone() {
+        // 2倍の大きさで描く
         context.scale(2, 2);
-        context.clearRect(0, 0, board_size, board_size);
+        context.clearRect(0, 0, CanvasSize, CanvasSize);
 
-        // 全体の色
-        context.fillStyle = "#a52250";
-        context.fillRect(0, 0, board_size, board_size);
+        context.font = "13px 'Hiragino Sans', 'Meiryo', sans-serif";
+        context.textAlign = "center";
+        context.textBaseline = "middle";
 
-        // グリッド
-        context.fillStyle = "#000000";
-        for (let x = 0; x <= board_size; x += board_size / 8) {
+        // 座標
+        for (let i = 0; i < 8; ++i) {
+            context.fillText(ColumnHeader[i], IndexGridSize + (i + 0.5) * GridSize, IndexGridSize / 2);
+            context.fillText(RowHeader[i], IndexGridSize / 2, IndexGridSize + (i + 0.5) * GridSize);
+        }
+
+        // グリッド線
+        for (let i = 0; i < 9; ++i) {
             context.beginPath();
-            context.moveTo(x, 0);
-            context.lineTo(x, board_size);
+            context.moveTo(IndexGridSize + i * GridSize, IndexGridSize);
+            context.lineTo(IndexGridSize + i * GridSize, CanvasSize);
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(IndexGridSize, IndexGridSize + i * GridSize);
+            context.lineTo(CanvasSize, IndexGridSize + i * GridSize);
             context.stroke();
         }
 
-        for (let y = 0; y <= board_size; y += board_size / 8) {
-            context.beginPath();
-            context.moveTo(0, y);
-            context.lineTo(board_size, y);
-            context.stroke();
-        }
-
-        // Xあたりの黒い点々
-        context.beginPath();
-        context.arc(2 * grid_size, 2 * grid_size, 3, 0, 2 * Math.PI, true);
-        context.fill();
-
-        context.beginPath();
-        context.arc(6 * grid_size, 2 * grid_size, 3, 0, 2 * Math.PI, true);
-        context.fill();
-
-        context.beginPath();
-        context.arc(2 * grid_size, 6 * grid_size, 3, 0, 2 * Math.PI, true);
-        context.fill();
-
-        context.beginPath();
-        context.arc(6 * grid_size, 6 * grid_size, 3, 0, 2 * Math.PI, true);
-        context.fill();
+        // 点
+        renderPoint(2, 2);
+        renderPoint(6, 2);
+        renderPoint(2, 6);
+        renderPoint(6, 6);
 
         context.scale(0.5, 0.5);
+    }
 
-        // ひっくり返された石はひっくり返るアニメーションをさせる。
-        // その他の石はアニメーションなしで描画
+    function renderStone(x, y, color, phase) {
+        context.drawImage(StoneImage,
+            phase * StoneImageSize,
+            (color - 1) * StoneImageSize,
+            StoneImageSize,
+            StoneImageSize,
+            // 実際の大きさは2倍なので...(scaleが等倍に戻っている)
+            (IndexGridSize + GridSize * x) * 2,
+            (IndexGridSize + GridSize * y) * 2,
+            StoneImageSize,
+            StoneImageSize
+        );
+    }
 
-        let black_bb = reversi.bitboard_of(Player.black);
-        let white_bb = reversi.bitboard_of(Player.white);
+    function renderMark(x, y) {
+        context.scale(2, 2);
+        //     context.fillStyle = "#ff0037";
+        context.shadowOffsetX = 0;
+        context.shadowOffsetY = 0;
+        context.shadowBlur = 0;
+        context.beginPath();
+        context.arc(
+            IndexGridSize + (x + 0.5) * GridSize,
+            IndexGridSize + (y + 0.5) * GridSize,
+            3, 0, 2 * Math.PI, true);
+        context.fill();
+        context.scale(0.5, 0.5);
+    }
 
-        let last_flip = reversi.last_flip();
-        let flip_bb = last_flip.flip_bb;
+    // 1<=phase<=7の時フリップアニメーションをする
+    // phase=8になったらアニメーション停止、最後に置いた石をマーキング
+    function render(reversi, phase) {
+        renderBoardExceptStone();
 
-        black_bb.foreach((x, y) => {
-            let sq = x + y * 8;
+        let flipped = phase < 8 ? reversi.getLastFlip() : [];
+        let moveSQ = reversi.getLastFlip()[0];
 
-            if (phase && flip_bb.test(sq)) {
-                context.drawImage(stone_image,
-                    image_size * (recursion - phase + 1), image_size,
-                    image_size, image_size,
-                    x * image_size, y * image_size,
-                    image_size, image_size);
-            }
-            // 静止しした石
-            else {
-                context.drawImage(stone_image,
-                    0, 0,
-                    image_size, image_size,
-                    x * image_size, y * image_size,
-                    image_size, image_size);
-            }
-        });
-
-        white_bb.foreach((x, y) => {
-            let sq = x + y * 8;
-
-            if (phase && flip_bb.test(sq)) {
-                context.drawImage(stone_image,
-                    image_size * (recursion - phase + 1), 0,
-                    image_size, image_size,
-                    x * image_size, y * image_size,
-                    image_size, image_size);
-            }
-            // 静止しした石
-            else {
-                context.drawImage(stone_image,
-                    0, image_size,
-                    image_size, image_size,
-                    x * image_size, y * image_size,
-                    image_size, image_size);
-            }
-        });
-
-        if (phase > 0) {
-            setTimeout(() => render(reversi, phase - 1), 15);
-        }
-        // アニメーションが終わった
-        else {
-            // 最後においた石にマーク
-            let sq = last_flip.sq;
+        flipped.forEach(sq => {
             let x = sq % 8;
-            let y = sq / 8 | 0;
+            let y = sq / 8;
+            renderStone(x, y, flipState(reversi.getSquareState(x, y)), phase);
+        });
 
-            context.scale(2, 2);
-            context.fillStyle = "#ff0037";
-            context.shadowOffsetX = 0;
-            context.shadowOffsetY = 0;
-            context.shadowBlur = 0;
-            context.beginPath();
-            context.arc(x * grid_size + grid_size / 2, y * grid_size + grid_size / 2, 3, 0, 2 * Math.PI, true);
-            context.fill();
-            context.scale(0.5, 0.5);
+        for (let y = 0; y < 8; ++y) {
+            for (let x = 0; x < 8; ++x) {
+                let sqstate = reversi.getSquareState(x, y);
+                if (sqstate === SquareState.empty || flipped.indexOf(boardIndex(x, y)) !== -1) continue;
 
-            // callback
+                renderStone(x, y, sqstate, 0);
+            }
+        }
+
+        if (phase < 8) {
+            setTimeout(() => render(reversi, phase + 1), 15);
+        }
+        else {
+            let x = moveSQ % 8;
+            let y = moveSQ / 8;
+            renderMark(x, y);
             onRenderingFinished();
         }
     }
@@ -143,19 +136,16 @@ let BoardCanvas = (function () {
     return {
         render(reversi) {
             if (!(reversi instanceof Reversi)) return;
-
-            render(reversi, recursion);
+            render(reversi, 1);
         },
 
-        onCanvasClicked(func) {
+        onTryingToPlaceStoneAt(func) {
             if (typeof func !== "function") return;
-
-            onCanvasClicked = func;
+            onTryingToPlaceStoneAt = func;
         },
 
         onRenderingFinished(func) {
             if (typeof func !== "function") return;
-
             onRenderingFinished = func;
         }
     };
