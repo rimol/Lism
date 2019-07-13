@@ -1,6 +1,11 @@
 // 盤面描画
+import { SquareState } from './reversi.js';
+import { Reversi } from './reversi.js';
+import { flipState } from './reversi.js';
+import { boardIndex } from './reversi.js';
 
-let BoardCanvas = (function () {
+
+export let BoardCanvas = (function () {
     let onRenderingFinished = function () { };
     let onTryingToPlaceStoneAt = function () { };
 
@@ -109,7 +114,7 @@ let BoardCanvas = (function () {
 
         flipped.forEach(sq => {
             let x = sq % 8;
-            let y = sq / 8;
+            let y = sq / 8 | 0;
             renderStone(x, y, flipState(reversi.getSquareState(x, y)), phase);
         });
 
@@ -127,7 +132,7 @@ let BoardCanvas = (function () {
         }
         else {
             let x = moveSQ % 8;
-            let y = moveSQ / 8;
+            let y = moveSQ / 8 | 0;
             renderMark(x, y);
             onRenderingFinished();
         }

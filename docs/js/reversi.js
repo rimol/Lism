@@ -1,36 +1,38 @@
-let SquareState = {
+export let SquareState = {
     empty: 0,
     black: 1,
     white: 2,
 };
 
-let Player = {
+export let Player = {
     black: 1,
     white: 2,
 }
 
 // 黒白を反転する
-function flipState(sqstate) {
+export function flipState(sqstate) {
     return sqstate ^= 3;
 }
 
-/* (x, y)
-  A      B C D E F G H
-1 (0, 0)             (7, 0)
-2
+/* 行番号がy, 列番号がx
+  A B C D E F G H
+1 0 1 2 3 4 5 6 7
+2 8...
 3
 4
 5
 6
 7
-8
+8            ...63
  */
-function boardIndex(x, y) {
+export function boardIndex(x, y) {
     return y * 8 + x;
 }
 
 // 返ってきた配列の長さが0ならillegalMove
-function getFlip(board, x, y, color) {
+export function getFlip(board, x, y, color) {
+    if (board.getSquareState(x, y) !== SquareState.empty) return [];
+
     // (x, y) が (i, j)方向の向きで一番端ならtrueを返す
     function endOfLine(x, y, i, j) {
         // 一つ進めて盤の外に出ればtrue.
@@ -63,7 +65,7 @@ function getFlip(board, x, y, color) {
     return flip;
 }
 
-class Reversi {
+export class Reversi {
     constructor(recordStr) {
         this.player = SquareState.black;
         this.isOver = false;
@@ -127,7 +129,7 @@ class Reversi {
     }
 
     isLegalMove(x, y, color) {
-        return this.getSquareState(x, y) === SquareState.empty && getFlip(this.board, x, y, color).length > 0;
+        return getFlip(this.board, x, y, color).length > 0;
     }
 
     // sqにcolorの石を置き、flipの位置にある石をひっくり返し、手番を変更する

@@ -1,11 +1,17 @@
-﻿function reverseString(str) {
+﻿import { Player } from './reversi.js';
+import { Reversi } from './reversi.js';
+import { BoardCanvas } from './render.js';
+import { flipState } from './reversi.js';
+
+
+function reverseString(str) {
     return str.split("").reverse().join("");
 }
 
 !function () {
-    let currentReversi;
+    let currentReversi = new Reversi();
     let winNum = 0;
-    let humanColor;
+    let humanColor = Player.black;
 
     function newGame() {
         currentReversi = new Reversi();

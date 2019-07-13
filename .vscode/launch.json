@@ -2,10 +2,11 @@
   "version": "0.1.0",
   "configurations": [
     {
-      "name": "Launch local file",
+      "name": "Remote debug",
       "type": "chrome",
       "request": "launch",
-      "file": "${workspaceRoot}/docs/index.html"
+      "url": "http://localhost:8000",
+      "webRoot": "${workspaceRoot}/",
     }
   ]
 }
