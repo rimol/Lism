@@ -21,11 +21,13 @@ function reverseString(str) {
 
     function onCOMTurn() {
         for (let i = 0; i < 64; ++i) {
-            if (currentReversi.isLegalMove(i >>> 3, i % 8, currentReversi.player)) {
-                currentReversi.move(i % 8, i >>> 3);
+            let x = i % 8;
+            let y = i / 8 | 0;
+            if (currentReversi.isLegalMove(x, y, currentReversi.player)) {
+                currentReversi.move(x, y);
                 BoardCanvas.render(currentReversi);
 
-                // if (currentReversi.player === flipState(humanColor)) onCOMTurn();
+                if (currentReversi.player === flipState(humanColor)) onCOMTurn();
 
                 break;
             }

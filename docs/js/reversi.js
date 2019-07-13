@@ -31,7 +31,7 @@ export function boardIndex(x, y) {
 
 // 返ってきた配列の長さが0ならillegalMove
 export function getFlip(board, x, y, color) {
-    if (board.getSquareState(x, y) !== SquareState.empty) return [];
+    if (board[boardIndex(x, y)] !== SquareState.empty) return [];
 
     // (x, y) が (i, j)方向の向きで一番端ならtrueを返す
     function endOfLine(x, y, i, j) {
