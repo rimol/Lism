@@ -1,8 +1,6 @@
-﻿import { Player } from './reversi.js';
-import { Reversi } from './reversi.js';
+﻿import { Player, Reversi, flipState } from './reversi.js';
 import { BoardCanvas } from './render.js';
-import { flipState } from './reversi.js';
-
+import { Engine } from './engine.js';
 
 function reverseString(str) {
     return str.split("").reverse().join("");
@@ -19,29 +17,17 @@ function reverseString(str) {
         humanColor = Player.black;
     }
 
-    function onCOMTurn() {
-        for (let i = 0; i < 64; ++i) {
-            let x = i % 8;
-            let y = i / 8 | 0;
-            if (currentReversi.isLegalMove(x, y, currentReversi.player)) {
-                currentReversi.move(x, y);
-                BoardCanvas.render(currentReversi);
+    async function onCOMTurn() {
+        let move = await Engine.chooseBestMove(currentReversi);
 
-                if (currentReversi.player === flipState(humanColor)) onCOMTurn();
-
-                break;
-            }
+        if (!currentReversi.isLegalMove(move.x, move.y, currentReversi.player)) {
+            throw "Engineが不正な手を打ちました";
         }
-        // let move = await Engine.chooseBestMove(reversi);
 
-        // if (!currentReversi.isLegalMove(move.x, move.y)) {
-        //     throw "Engineが不正な手を打ちました";
-        // }
+        currentReversi.move(move.x, move.y);
+        BoardCanvas.render(currentReversi);
 
-        // currentReversi.move(move.x, move.y);
-        // BoardCanvas.render(currentReversi);
-
-        // if (currentReversi.player === flipState(humanColor)) onCOMTurn();
+        if (!currentReversi.isOver && currentReversi.player === flipState(humanColor)) onCOMTurn();
     }
 
     BoardCanvas.onTryingToPlaceStoneAt((x, y) => {
@@ -49,7 +35,7 @@ function reverseString(str) {
             currentReversi.move(x, y);
             BoardCanvas.render(currentReversi);
 
-            if (currentReversi.player === flipState(humanColor)) onCOMTurn();
+            if (!currentReversi.isOver && currentReversi.player === flipState(humanColor)) onCOMTurn();
         }
     });
 

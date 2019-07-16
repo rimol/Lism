@@ -1,9 +1,5 @@
 // 盤面描画
-import { SquareState } from './reversi.js';
-import { Reversi } from './reversi.js';
-import { flipState } from './reversi.js';
-import { boardIndex } from './reversi.js';
-
+import { SquareState, Reversi, flipState, boardIndex } from './reversi.js';
 
 export let BoardCanvas = (function () {
     let onRenderingFinished = function () { };

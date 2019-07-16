@@ -154,16 +154,15 @@ export class Reversi {
     }
 
     passOrFinishGameIfNeeded() {
-        let c = this.player;
         let passed = false;
         while (true) {
-            if (this.noLegalMoveExists(c)) {
+            if (this.noLegalMoveExists(this.player)) {
                 if (passed) {
                     this.isOver = true;
                     return;
                 }
                 else {
-                    c = flipState(c);
+                    this.player = flipState(this.player);
                     passed = true;
                 }
             }
