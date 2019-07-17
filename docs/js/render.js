@@ -21,12 +21,7 @@ export let BoardCanvas = (function () {
     const StoneImageSize = 80;
     StoneImage.src = "res/stones_80.png";
 
-    let FlipSound = new Howl({
-        src: ["res/se_maoudamashii_se_footstep02.mp3"],
-        sprite: {
-            flip: [0, 125],
-        }
-    });
+    let FlipSound = new Howl({ src: ["res/flip_sound.mp3"] });
 
     canvas.addEventListener("mouseup", e => {
         let rect = canvas.getBoundingClientRect();
@@ -144,7 +139,7 @@ export let BoardCanvas = (function () {
         });
 
         if (phase >= 8 && phase % 2 === 0) {
-            FlipSound.play("flip");
+            FlipSound.play();
         }
 
         // flipped以外をここで描画
