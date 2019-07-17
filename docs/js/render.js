@@ -11,7 +11,7 @@ export let BoardCanvas = (function () {
     // みためのサイズ、内部的にはこれの2倍の大きさがある.
     const CanvasSize = canvas.clientWidth;
     const GridSize = 40;
-    const IndexGridSize = 30;
+    const IndexGridSize = 20;
 
     const RowHeader = '12345678';
     const ColumnHeader = 'ABCDEFGH';

@@ -14,7 +14,9 @@ function reverseString(str) {
     function newGame() {
         currentReversi = new Reversi();
         BoardCanvas.render(currentReversi);
-        humanColor = Player.black;
+        humanColor = Player.white;
+
+        if (!currentReversi.isOver && currentReversi.player === flipState(humanColor)) onCOMTurn();
     }
 
     async function onCOMTurn() {
