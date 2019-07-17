@@ -10,13 +10,12 @@ function reverseString(str) {
     let currentReversi = new Reversi();
     let winNum = 0;
     let humanColor = Player.black;
+    currentReversi.isOver = true;
 
     function newGame() {
         currentReversi = new Reversi();
-        BoardCanvas.render(currentReversi);
         humanColor = Player.white;
-
-        if (!currentReversi.isOver && currentReversi.player === flipState(humanColor)) onCOMTurn();
+        BoardCanvas.render(currentReversi);
     }
 
     async function onCOMTurn() {
@@ -28,16 +27,16 @@ function reverseString(str) {
 
         currentReversi.move(move.x, move.y);
         BoardCanvas.render(currentReversi);
-
-        if (!currentReversi.isOver && currentReversi.player === flipState(humanColor)) onCOMTurn();
     }
 
+    BoardCanvas.onRenderingFinished(() => {
+        if (!currentReversi.isOver && currentReversi.player === flipState(humanColor)) onCOMTurn();
+    });
+
     BoardCanvas.onTryingToPlaceStoneAt((x, y) => {
-        if (currentReversi.player === humanColor && currentReversi.isLegalMove(x, y, currentReversi.player)) {
+        if (!currentReversi.isOver && currentReversi.player === humanColor && currentReversi.isLegalMove(x, y, currentReversi.player)) {
             currentReversi.move(x, y);
             BoardCanvas.render(currentReversi);
-
-            if (!currentReversi.isOver && currentReversi.player === flipState(humanColor)) onCOMTurn();
         }
     });
 

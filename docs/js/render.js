@@ -1,5 +1,6 @@
 // 盤面描画
 import { SquareState, Reversi, flipState, boardIndex } from './reversi.js';
+import { _Howl as Howl } from '../lib/howler.min.js';
 
 export let BoardCanvas = (function () {
     let onRenderingFinished = function () { };
@@ -18,7 +19,14 @@ export let BoardCanvas = (function () {
 
     const StoneImage = new Image();
     const StoneImageSize = 80;
-    StoneImage.src = "img/stones_80.png";
+    StoneImage.src = "res/stones_80.png";
+
+    let FlipSound = new Howl({
+        src: ["res/se_maoudamashii_se_footstep02.mp3"],
+        sprite: {
+            flip: [0, 125],
+        }
+    });
 
     canvas.addEventListener("mouseup", e => {
         let rect = canvas.getBoundingClientRect();
@@ -37,6 +45,7 @@ export let BoardCanvas = (function () {
     function renderBoardExceptStone() {
         // 2倍の大きさで描く
         context.scale(2, 2);
+        context.fillStyle = "#000000";
         context.clearRect(0, 0, CanvasSize, CanvasSize);
 
         context.font = "13px 'Hiragino Sans', 'Meiryo', sans-serif";
@@ -87,7 +96,7 @@ export let BoardCanvas = (function () {
 
     function renderMark(x, y) {
         context.scale(2, 2);
-        //     context.fillStyle = "#ff0037";
+        context.fillStyle = "#ff0037";
         context.shadowOffsetX = 0;
         context.shadowOffsetY = 0;
         context.shadowBlur = 0;
@@ -100,20 +109,45 @@ export let BoardCanvas = (function () {
         context.scale(0.5, 0.5);
     }
 
-    // 1<=phase<=7の時フリップアニメーションをする
-    // phase=8になったらアニメーション停止、最後に置いた石をマーキング
     function render(reversi, phase) {
         renderBoardExceptStone();
 
-        let flipped = phase < 8 ? reversi.getLastFlip() : [];
-        let moveSQ = reversi.getLastFlip()[0];
+        let flipped = reversi.getLastFlip();
+        let moveSQ = flipped.length ? flipped[0] : -1;
+        let moveX = moveSQ % 8;
+        let moveY = moveSQ / 8 | 0;
+
+        let recursion = 0;
 
         flipped.forEach(sq => {
             let x = sq % 8;
             let y = sq / 8 | 0;
-            renderStone(x, y, flipState(reversi.getSquareState(x, y)), phase);
+
+            // moveSQからdistマス離れたマスは phase = 2dist - 1 のときアニメーションを開始する
+            // start <= phase < start + 7の間アニメーションをする
+            // recursionの回数は2 * max(dist) - 1 + 7となる
+            let dist = Math.max(Math.abs(x - moveX), Math.abs(y - moveY));
+            let start = 2 * dist - 1;
+
+            // せっかくなのでここで求めておく
+            recursion = Math.max(recursion, start + 7);
+
+            if (sq === moveSQ || phase >= start + 7) {
+                renderStone(x, y, reversi.getSquareState(x, y), 0);
+            }
+            else if (phase < start) {
+                renderStone(x, y, flipState(reversi.getSquareState(x, y)), 0);
+            }
+            else {
+                renderStone(x, y, flipState(reversi.getSquareState(x, y)), phase - start + 1);
+            }
         });
 
+        if (phase >= 8 && phase % 2 === 0) {
+            FlipSound.play("flip");
+        }
+
+        // flipped以外をここで描画
         for (let y = 0; y < 8; ++y) {
             for (let x = 0; x < 8; ++x) {
                 let sqstate = reversi.getSquareState(x, y);
@@ -123,16 +157,16 @@ export let BoardCanvas = (function () {
             }
         }
 
-        if (phase < 8) {
-            setTimeout(() => render(reversi, phase + 1), 15);
+        if (phase < recursion) {
+            setTimeout(() => render(reversi, phase + 1), 23);
         }
         else {
-            let x = moveSQ % 8;
-            let y = moveSQ / 8 | 0;
-            renderMark(x, y);
+            if (moveSQ !== -1) renderMark(moveX, moveY);
             onRenderingFinished();
         }
     }
+
+    renderBoardExceptStone();
 
     return {
         render(reversi) {
