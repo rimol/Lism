@@ -1,9 +1,47 @@
 importScripts('./out.js');
+importScripts('../lib/unzip.min.js');
 
 let initCompleted = false;
 Module.onRuntimeInitialized = () => {
-    initCompleted = true;
-    postMessage({ type: "init_completed" });
+    fetch('./eval.zip')
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => {
+            let compressed = new Uint8Array(arrayBuffer);
+            let unzip = new Zlib.Unzip(compressed);
+            let filenames = unzip.getFilenames();
+
+            let loaded = Array(61).fill(false);
+            loaded[0] = true;
+
+            for (let filename of filenames) {
+                if (!/eval\/[0-9]+.bin/.test(filename))
+                    continue;
+
+                let stage = filename.replace(/[^0-9]/g, '') | 0;
+
+                let plain = unzip.decompress(filename);
+                let evalValues = new Float64Array(plain.buffer, plain.byteOffset, plain.byteLength / 8);
+
+                let p_eval = _getEvalArraysPointer_exported(stage);
+                let p_mobility = _getMobilityWeightPointer_exported(stage);
+                let p_intercept = _getInterceptPointer_exported(stage);
+
+                // 最後二つは開放度の重みと切片なので-2する.
+                for (let i = 0; i < evalValues.length - 2; ++i) {
+                    Module.HEAPF64[p_eval + i] = evalValues[i];
+                }
+                Module.HEAPF64[p_mobility] = evalValues[evalValues.length - 2];
+                Module.HEAPF64[p_intercept] = evalValues[evalValues.length - 1];
+
+                loaded[stage] = true;
+            }
+
+            if (loaded.every(v => v)) {
+                initCompleted = true;
+                postMessage({ type: "init_completed" });
+            }
+            else throw "failed to load eval files";
+        });
 };
 
 onmessage = ({ data }) => {
