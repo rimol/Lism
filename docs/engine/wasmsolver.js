@@ -22,9 +22,9 @@ Module.onRuntimeInitialized = () => {
                 let plain = unzip.decompress(filename);
                 let evalValues = new Float64Array(plain.buffer, plain.byteOffset, plain.byteLength / 8);
 
-                let p_eval = _getEvalArraysPointer_exported(stage);
-                let p_mobility = _getMobilityWeightPointer_exported(stage);
-                let p_intercept = _getInterceptPointer_exported(stage);
+                let p_eval = _getEvalArraysPointer_exported(stage) / 8;
+                let p_mobility = _getMobilityWeightPointer_exported(stage) / 8;
+                let p_intercept = _getInterceptPointer_exported(stage) / 8;
 
                 // 最後二つは開放度の重みと切片なので-2する.
                 for (let i = 0; i < evalValues.length - 2; ++i) {
@@ -46,12 +46,18 @@ Module.onRuntimeInitialized = () => {
 
 onmessage = ({ data }) => {
     if (!initCompleted) {
-        postMessage({ type: "error", message: "the solver hasn't been initialized yet" });
+        postMessage({ type: "error", message: "wasm-reversi-engine hasn't been initialized yet" });
     }
-    else if (data == null || !Array.isArray(data.p) || !Array.isArray(data.o) || data.p.length < 2 || data.o.length < 2) {
+    else if (data == null) {
+        postMessage({ type: "error", message: "無意味に呼び出すな💢" });
+    }
+    else if (data.type == null) {
+        postMessage({ type: "error", message: "you must specify a type of a message" });
+    }
+    else if (!Array.isArray(data.p) || !Array.isArray(data.o) || data.p.length < 2 || data.o.length < 2) {
         postMessage({ type: "error", message: "the invalid arguments" });
     }
-    else {
+    else if (data.type === "solve") {
         let pointer = _solve_exported(data.p[1], data.p[0], data.o[1], data.o[0]);
         let bestScore = getValue(pointer, 'i32');
         let nodeCount = getValue(pointer + 4, 'i32');
@@ -73,6 +79,31 @@ onmessage = ({ data }) => {
                 wholeTime: wholeTime,
                 bestMoves: bestMoves
             }
+        });
+    }
+    else if (data.type === "eval") {
+        let pointer = _evalAllMoves_exported(data.p[1], data.p[0], data.o[1], data.o[0]) / 8;
+        let movesWithScore = [];
+        for (let i = 0; i < 64; ++i) {
+            movesWithScore.push({
+                move: i,
+                score: Module.HEAPF64[pointer + i]
+            });
+        }
+
+        movesWithScore = movesWithScore.sort((a, b) => b.score - a.score);
+        movesWithScore.forEach(v => {
+            let x = v.move % 8;
+            let y = v.move / 8 | 0;
+            let moveString = "ABCDEFGH"[x] + (y + 1);
+
+            if (v.score > -10000)
+                console.log(`${moveString}: ${v.score}`);
+        });
+
+        postMessage({
+            type: "evaluation",
+            result: movesWithScore
         });
     }
 }

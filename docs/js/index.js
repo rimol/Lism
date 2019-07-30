@@ -14,7 +14,7 @@ function reverseString(str) {
 
     function newGame() {
         currentReversi = new Reversi();
-        humanColor = Player.white;
+        humanColor = Player.black;
         BoardCanvas.render(currentReversi);
     }
 
@@ -40,5 +40,5 @@ function reverseString(str) {
         }
     });
 
-    newGame();
+    Engine.onReady(newGame);
 }();

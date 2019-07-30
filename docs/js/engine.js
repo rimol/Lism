@@ -2,17 +2,23 @@ import { Player, flipState } from './reversi.js';
 
 export let Engine = (function () {
     let isReady = false;
+    let callbackOnReady = () => { };
     let isWorkerRunning = false;
     let callback = {
         resolve: function () { },
         reject: function () { }
     }
 
-    let solverWorker = new Worker('../engine/wasmsolver.js');
-    solverWorker.addEventListener('message', ({ data }) => {
+    let engineWorker = new Worker('../engine/wasmsolver.js');
+    engineWorker.addEventListener('message', ({ data }) => {
         if (data.type === "init_completed") {
             isReady = true;
             console.log('init completed');
+            callbackOnReady();
+        }
+        else if (data.type === "evaluation") {
+            isWorkerRunning = false;
+            callback.resolve(data.result);
         }
         else if (data.type === "solution") {
             isWorkerRunning = false;
@@ -36,6 +42,22 @@ export let Engine = (function () {
         return bb;
     }
 
+    function evalAllMoves(p, o) {
+        if (isWorkerRunning) {
+            return new Promise((_, reject) => {
+                reject("wait for the previous task");
+            });
+        }
+        else {
+            isWorkerRunning = true;
+            engineWorker.postMessage({ type: "eval", p: p, o: o });
+            return new Promise((resolve, reject) => {
+                callback.resolve = resolve;
+                callback.reject = reject;
+            });
+        }
+    }
+
     function solve(p, o) {
         if (isWorkerRunning) {
             return new Promise((_, reject) => {
@@ -44,7 +66,7 @@ export let Engine = (function () {
         }
         else {
             isWorkerRunning = true;
-            solverWorker.postMessage({ p: p, o: o });
+            engineWorker.postMessage({ type: "solve", p: p, o: o });
             return new Promise((resolve, reject) => {
                 callback.resolve = resolve;
                 callback.reject = reject;
@@ -60,23 +82,17 @@ export let Engine = (function () {
         const SolverSearchDepth = 20;
         let cnt = reversi.getStoneCount(Player.black) + reversi.getStoneCount(Player.white);
 
+        let p = toBitboard(reversi, reversi.player);
+        let o = toBitboard(reversi, flipState(reversi.player));
+
         if (cnt < 64 - SolverSearchDepth) {
-            let legalMoves = [];
-            for (let i = 0; i < 64; ++i) {
-                let x = i % 8;
-                let y = i / 8 | 0;
-
-                if (reversi.isLegalMove(x, y, reversi.player)) {
-                    legalMoves.push({ x: x, y: y });
-                }
+            let movesWithScore = await evalAllMoves(p, o);
+            return {
+                x: movesWithScore[0].move % 8,
+                y: movesWithScore[0].move / 8 | 0
             }
-
-            return legalMoves[intrand(legalMoves.length)];
         }
         else {
-            let p = toBitboard(reversi, reversi.player);
-            let o = toBitboard(reversi, flipState(reversi.player));
-
             let solution = await solve(p, o);
             return {
                 x: solution.bestMoves[0] % 8,
@@ -87,6 +103,10 @@ export let Engine = (function () {
 
     return {
         isReady() { return isReady; },
+        onReady(func) {
+            if (typeof func === "function")
+                callbackOnReady = func;
+        },
         chooseBestMove: chooseBestMove,
     };
 })();
