@@ -23,6 +23,9 @@ onmessage = ({ data }) => {
         for (let i = 0; i < 60; ++i) {
             bestMoves[i] = getValue(pointer + (i + 4) * 4, 'i32');
         }
+        console.log(`score: ${bestScore}`);
+        console.log(`NPS: ${nodeCount / scoreLockTime | 0}k nodes/sec`);
+
         postMessage({
             type: "solution",
             result: {
