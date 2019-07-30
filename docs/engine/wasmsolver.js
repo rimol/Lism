@@ -3,6 +3,8 @@ importScripts('../lib/unzip.min.js');
 
 let initCompleted = false;
 Module.onRuntimeInitialized = () => {
+    _initSymmetricPattern_exported();
+
     fetch('./eval.zip')
         .then(response => response.arrayBuffer())
         .then(arrayBuffer => {
@@ -91,15 +93,17 @@ onmessage = ({ data }) => {
             });
         }
 
-        movesWithScore = movesWithScore.sort((a, b) => b.score - a.score);
+        movesWithScore.sort((a, b) => b.score - a.score);
+        let evalLog = "";
         movesWithScore.forEach(v => {
             let x = v.move % 8;
             let y = v.move / 8 | 0;
             let moveString = "ABCDEFGH"[x] + (y + 1);
 
             if (v.score > -10000)
-                console.log(`${moveString}: ${v.score}`);
+                evalLog += `${moveString}: ${v.score} `;
         });
+        console.log(evalLog);
 
         postMessage({
             type: "evaluation",
