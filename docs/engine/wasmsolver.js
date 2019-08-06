@@ -26,14 +26,14 @@ Module.onRuntimeInitialized = () => {
 
                 let p_eval = _getEvalArraysPointer_exported(stage) / 8;
                 let p_mobility = _getMobilityWeightPointer_exported(stage) / 8;
-                let p_intercept = _getInterceptPointer_exported(stage) / 8;
+                let p_parity = _getParityWeightPointer_exported(stage) / 8;
 
                 // 最後二つは開放度の重みと切片なので-2する.
                 for (let i = 0; i < evalValues.length - 2; ++i) {
                     Module.HEAPF64[p_eval + i] = evalValues[i];
                 }
                 Module.HEAPF64[p_mobility] = evalValues[evalValues.length - 2];
-                Module.HEAPF64[p_intercept] = evalValues[evalValues.length - 1];
+                Module.HEAPF64[p_parity] = evalValues[evalValues.length - 1];
 
                 loaded[stage] = true;
             }
