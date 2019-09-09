@@ -2,6 +2,12 @@
     /* background: rgb(198, 251, 255); */
 }
 
+#button-settings {
+    border: 0;
+    background: none;
+    margin-right: 10px
+}
+
 #com-status-box, #human-status-box {
     width: 341px;
     margin: auto;

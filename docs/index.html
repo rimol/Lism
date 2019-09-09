@@ -11,7 +11,11 @@
 
 <body id="reversi">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand mb-0 h1">isrever</a>
+        <a class="navbar-brand mr-auto mb-0 h1">isrever</a>
+        <div class="navbar-nav">
+            <button type="button" id="button-settings" onclick="alert('hello!');"><img
+                    src="res/settings.png" /></button>
+        </div>
         <div class="navbar-nav">
             <a class="nav-item nav-link" href="https://github.com/rimol/isrever">GitHub</a>
         </div>
@@ -19,7 +23,7 @@
 
     <div class="container">
         <div id="com-status-box">
-            コンピュータ
+            <p id="text-num-computer-stone"></p>
         </div>
 
         <div id="reversi-board">
@@ -27,7 +31,7 @@
         </div>
 
         <div id="human-status-box">
-            あなた
+            <p id="text-num-human-stone"></p>
         </div>
     </div>
 
@@ -40,7 +44,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
     <script type="module" src="js/index.js"></script>
-    <script type="module" src="js/test.js"></script>
 </body>
 
 </html>

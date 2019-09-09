@@ -18,6 +18,13 @@ function reverseString(str) {
         BoardCanvas.render(currentReversi);
     }
 
+    function displayNumStone() {
+        let p_human = document.getElementById("text-num-human-stone");
+        let p_computer = document.getElementById("text-num-computer-stone");
+        p_human.innerHTML = `あなた ${currentReversi.getStoneCount(humanColor)}石`;
+        p_computer.innerHTML = `コンピュータ ${currentReversi.getStoneCount(flipState(humanColor))}石`;
+    }
+
     async function onCOMTurn() {
         let move = await Engine.chooseBestMove(currentReversi);
 
@@ -30,6 +37,7 @@ function reverseString(str) {
     }
 
     BoardCanvas.onRenderingFinished(() => {
+        displayNumStone();
         if (!currentReversi.isOver && currentReversi.player === flipState(humanColor)) onCOMTurn();
     });
 
