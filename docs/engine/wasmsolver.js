@@ -1,9 +1,9 @@
-importScripts('./out.js');
+importScripts('./eng.js');
 importScripts('../lib/unzip.min.js');
 
 let initCompleted = false;
 Module.onRuntimeInitialized = () => {
-    _initSymmetricPattern_exported();
+    _initialize();
 
     fetch('./eval.zip')
         .then(response => response.arrayBuffer())
@@ -12,29 +12,22 @@ Module.onRuntimeInitialized = () => {
             let unzip = new Zlib.Unzip(compressed);
             let filenames = unzip.getFilenames();
 
-            let loaded = Array(61).fill(false);
+            let loaded = Array(15 + 1).fill(false);
             loaded[0] = true;
 
             for (let filename of filenames) {
-                if (!/eval\/[0-9]+.bin/.test(filename))
+                if (!/[0-9]+.bin/.test(filename))
                     continue;
-
+                // これ、バイトオーダーがリトルエンディアンじゃなかったらバグるのでは...
                 let stage = filename.replace(/[^0-9]/g, '') | 0;
 
+                if (!(1 <= stage && stage <= 15)) continue;
+
                 let plain = unzip.decompress(filename);
-                let evalValues = new Float64Array(plain.buffer, plain.byteOffset, plain.byteLength / 8);
-
-                let p_eval = _getEvalArraysPointer_exported(stage) / 8;
-                let p_mobility = _getMobilityWeightPointer_exported(stage) / 8;
-                let p_parity = _getParityWeightPointer_exported(stage) / 8;
-
-                // 最後二つは開放度の重みと切片なので-2する.
-                for (let i = 0; i < evalValues.length - 2; ++i) {
-                    Module.HEAPF64[p_eval + i] = evalValues[i];
-                }
-                Module.HEAPF64[p_mobility] = evalValues[evalValues.length - 2];
-                Module.HEAPF64[p_parity] = evalValues[evalValues.length - 1];
-
+                let pointer = Module._malloc(plain.byteLength);
+                Module.HEAPU8.set(plain, pointer);
+                _initWeightTable_exported(stage - 1, pointer);
+                Module._free(pointer);
                 loaded[stage] = true;
             }
 
@@ -84,7 +77,7 @@ onmessage = ({ data }) => {
         });
     }
     else if (data.type === "eval") {
-        let pointer = _evalAllMoves_exported(data.p[1], data.p[0], data.o[1], data.o[0]) / 8;
+        let pointer = _evalAllMoves_exported(data.p[1], data.p[0], data.o[1], data.o[0], 1) / 8;
         let movesWithScore = [];
         for (let i = 0; i < 64; ++i) {
             movesWithScore.push({
@@ -100,7 +93,7 @@ onmessage = ({ data }) => {
             let y = v.move / 8 | 0;
             let moveString = "ABCDEFGH"[x] + (y + 1);
 
-            if (v.score > -10000)
+            if (v.score > -1000)
                 evalLog += `${moveString}: ${v.score} `;
         });
         console.log(evalLog);
