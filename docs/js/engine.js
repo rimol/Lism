@@ -9,7 +9,7 @@ export let Engine = (function () {
         reject: function () { }
     }
 
-    let engineWorker = new Worker('../engine/wasmsolver.js');
+    let engineWorker = new Worker('../engine/wrapper.js');
     engineWorker.addEventListener('message', ({ data }) => {
         if (data.type === "init_completed") {
             isReady = true;

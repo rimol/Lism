@@ -77,7 +77,7 @@ onmessage = ({ data }) => {
         });
     }
     else if (data.type === "eval") {
-        let pointer = _evalAllMoves_exported(data.p[1], data.p[0], data.o[1], data.o[0], 1) / 8;
+        let pointer = _evalAllMoves_exported(data.p[1], data.p[0], data.o[1], data.o[0], 8) / 8;
         let movesWithScore = [];
         for (let i = 0; i < 64; ++i) {
             movesWithScore.push({
