@@ -1,6 +1,7 @@
 ﻿import { Player, Reversi, flipState } from './reversi.js';
 import { BoardCanvas } from './render.js';
 import { Engine } from './engine.js';
+import { OpeningBook } from './book.js';
 
 function reverseString(str) {
     return str.split("").reverse().join("");
@@ -26,7 +27,7 @@ function reverseString(str) {
     }
 
     async function onCOMTurn() {
-        let move = await Engine.chooseBestMove(currentReversi);
+        let move = OpeningBook.has(currentReversi) ? OpeningBook.chooseRandom(currentReversi) : await Engine.chooseBestMove(currentReversi);
 
         if (!currentReversi.isLegalMove(move.x, move.y, currentReversi.player)) {
             throw "Engineが不正な手を打ちました";
