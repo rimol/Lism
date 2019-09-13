@@ -3,7 +3,7 @@ importScripts('../lib/unzip.min.js');
 
 let initCompleted = false;
 Module.onRuntimeInitialized = () => {
-    _initialize();
+    _initialize_exported();
 
     fetch('./eval.zip')
         .then(response => response.arrayBuffer())

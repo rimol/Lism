@@ -13,7 +13,7 @@ Pattern _usedPattern;
 PatternEvaluator _evaluator;
 
 EMSCRIPTEN_KEEPALIVE
-void initialize() {
+void initialize_exported() {
     initCountFlipTables();
     initToBase3();
     _usedPattern = Pattern(LogistelloPatterns);
@@ -64,9 +64,9 @@ int *solve_exported(HalfBitboard p0, HalfBitboard p1, HalfBitboard o0, HalfBitbo
     solutionArray[2] = (int)solution.scoreLockTime;
     solutionArray[3] = (int)solution.wholeTime;
 
-    int i = 0;
+    int i = 4;
     for (int sq : solution.bestMoves) {
-        solutionArray[i += 4] = sq;
+        solutionArray[i++] = sq;
     }
 
     return &solutionArray[0];
