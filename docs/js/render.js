@@ -105,7 +105,7 @@ export let BoardCanvas = (function () {
         context.scale(0.5, 0.5);
     }
 
-    async function render(reversi, isRenderingEvalValuesEnabled, phase) {
+    async function render(reversi, isRenderingEvalValuesEnabled, depth, phase) {
         renderBoardExceptStone();
 
         let flipped = reversi.getLastFlip();
@@ -154,14 +154,14 @@ export let BoardCanvas = (function () {
         }
 
         if (phase < recursion) {
-            setTimeout(() => render(reversi, isRenderingEvalValuesEnabled, phase + 1), 23);
+            setTimeout(() => render(reversi, isRenderingEvalValuesEnabled, depth, phase + 1), 23);
         }
         else {
             if (moveSQ !== -1) renderMark(moveX, moveY);
 
             // ユーザが、評価値の計算が終わる前に石をおいたとき、rejectされるのでそれ用のコードを書いておく。
             try {
-                if (isRenderingEvalValuesEnabled) await renderEvalValues(reversi);
+                if (isRenderingEvalValuesEnabled) await renderEvalValues(reversi, depth);
                 onRenderingFinished();
             } catch (error) {
                 if (error != "terminated") throw error;
@@ -169,8 +169,7 @@ export let BoardCanvas = (function () {
         }
     }
 
-    async function renderEvalValues(reversi) {
-        let depth = 8; // とりあえず固定
+    async function renderEvalValues(reversi, depth) {
         let movesWithScore = await Engine.evalAllMoves(reversi, depth);
 
         movesWithScore.forEach(ms => {
@@ -188,9 +187,14 @@ export let BoardCanvas = (function () {
     renderBoardExceptStone();
 
     return {
-        render(reversi, isRenderingEvalValuesEnabled) {
+        render(reversi, isRenderingEvalValuesEnabled, depth) {
             if (!(reversi instanceof Reversi)) return;
-            render(reversi, isRenderingEvalValuesEnabled, 1);
+            render(reversi, isRenderingEvalValuesEnabled, depth, 1);
+        },
+
+        renderNoAnimation(reversi, isRenderingEvalValuesEnabled, depth) {
+            if (!(reversi instanceof Reversi)) return;
+            render(reversi, isRenderingEvalValuesEnabled, depth, 21);
         },
 
         onTryingToPlaceStoneAt(func) {

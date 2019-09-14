@@ -10,6 +10,7 @@ function reverseString(str) {
 !function () {
     let currentReversi = new Reversi();
     currentReversi.isOver = true;
+    let isRenderingEvalValuesEnabled = true;
 
     let PlayerType = {
         human: 0, computer: 1
@@ -53,9 +54,22 @@ function reverseString(str) {
         players[Player.black].exactDepth = players[Player.white].exactDepth = levels[v].exactDepth;
     };
 
+    function renderCurrent() {
+        BoardCanvas.render(currentReversi, isRenderingEvalValuesEnabled && players[currentReversi.player].type === PlayerType.human, players[Player.black].searchDepth);
+    }
+
+    function renderCurrentNoAnimation() {
+        BoardCanvas.renderNoAnimation(currentReversi, isRenderingEvalValuesEnabled && players[currentReversi.player].type === PlayerType.human, players[Player.black].searchDepth);
+    }
+
+    window.setWhetherEvalValuesDisplayedOrNot = function (v) {
+        isRenderingEvalValuesEnabled = v;
+        renderCurrentNoAnimation();
+    };
+
     function newGame() {
         currentReversi = new Reversi();
-        BoardCanvas.render(currentReversi, players[currentReversi.player].type === PlayerType.human);
+        renderCurrent();
     }
 
     function displayNumStone() {
@@ -87,7 +101,7 @@ function reverseString(str) {
         }
 
         currentReversi.move(move.x, move.y);
-        BoardCanvas.render(currentReversi, players[currentReversi.player].type === PlayerType.human);
+        renderCurrent();
     }
 
     BoardCanvas.onRenderingFinished(() => {
@@ -98,7 +112,7 @@ function reverseString(str) {
     BoardCanvas.onTryingToPlaceStoneAt((x, y) => {
         if (!currentReversi.isOver && players[currentReversi.player].type == PlayerType.human && currentReversi.isLegalMove(x, y, currentReversi.player)) {
             currentReversi.move(x, y);
-            BoardCanvas.render(currentReversi, players[currentReversi.player].type === PlayerType.human);
+            renderCurrent();
         }
     });
 

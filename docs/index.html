@@ -55,6 +55,12 @@
                 </div>
                 <div class="modal-body">
                     <div class="container-fluid">
+                        <h4>評価値表示</h4><br />
+                        <div class="radio-inline">
+                            <input type="checkbox" name="display-eval-enabled" checked="true">
+                            <label>オン</label>
+                        </div><br />
+
                         <h4>対局モード</h4><br />
                         <div class="radio-inline">
                             <input type="radio" name="game-mode" value="0">
@@ -131,6 +137,10 @@
                 else if (this.name == "computer-level") {
                     window.changeComputerLevel(Number(this.value));
                 }
+            });
+
+            $(":checkbox").on('change', function () {
+                window.setWhetherEvalValuesDisplayedOrNot(this.checked);
             });
         });
     </script>
