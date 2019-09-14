@@ -1,5 +1,6 @@
 // 盤面描画
 import { SquareState, Reversi, flipState, boardIndex } from './reversi.js';
+import { Engine } from './engine.js';
 import { _Howl as Howl } from '../lib/howler.min.js';
 
 export let BoardCanvas = (function () {
@@ -104,7 +105,7 @@ export let BoardCanvas = (function () {
         context.scale(0.5, 0.5);
     }
 
-    function render(reversi, phase) {
+    async function render(reversi, isRenderingEvalValuesEnabled, phase) {
         renderBoardExceptStone();
 
         let flipped = reversi.getLastFlip();
@@ -153,20 +154,43 @@ export let BoardCanvas = (function () {
         }
 
         if (phase < recursion) {
-            setTimeout(() => render(reversi, phase + 1), 23);
+            setTimeout(() => render(reversi, isRenderingEvalValuesEnabled, phase + 1), 23);
         }
         else {
             if (moveSQ !== -1) renderMark(moveX, moveY);
-            onRenderingFinished();
+
+            // ユーザが、評価値の計算が終わる前に石をおいたとき、rejectされるのでそれ用のコードを書いておく。
+            try {
+                if (isRenderingEvalValuesEnabled) await renderEvalValues(reversi);
+                onRenderingFinished();
+            } catch (error) {
+                if (error != "terminated") throw error;
+            }
         }
+    }
+
+    async function renderEvalValues(reversi) {
+        let depth = 8; // とりあえず固定
+        let movesWithScore = await Engine.evalAllMoves(reversi, depth);
+
+        movesWithScore.forEach(ms => {
+            context.scale(2, 2);
+            context.fillStyle = "#000000";
+            context.font = "13px 'Hiragino Sans', 'Meiryo', sans-serif";
+            context.textAlign = "center";
+            context.textBaseline = "middle";
+            let valueStr = (ms.score > 0 ? "+" : ms.score < 0 ? "-" : "") + ((Math.abs(ms.score) * 10 | 0) / 10);
+            context.fillText(valueStr, IndexGridSize + (ms.x + 0.5) * GridSize, IndexGridSize + (ms.y + 0.5) * GridSize);
+            context.scale(0.5, 0.5);
+        });
     }
 
     renderBoardExceptStone();
 
     return {
-        render(reversi) {
+        render(reversi, isRenderingEvalValuesEnabled) {
             if (!(reversi instanceof Reversi)) return;
-            render(reversi, 1);
+            render(reversi, isRenderingEvalValuesEnabled, 1);
         },
 
         onTryingToPlaceStoneAt(func) {

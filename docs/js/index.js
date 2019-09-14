@@ -55,7 +55,7 @@ function reverseString(str) {
 
     function newGame() {
         currentReversi = new Reversi();
-        BoardCanvas.render(currentReversi);
+        BoardCanvas.render(currentReversi, players[currentReversi.player].type === PlayerType.human);
     }
 
     function displayNumStone() {
@@ -87,7 +87,7 @@ function reverseString(str) {
         }
 
         currentReversi.move(move.x, move.y);
-        BoardCanvas.render(currentReversi);
+        BoardCanvas.render(currentReversi, players[currentReversi.player].type === PlayerType.human);
     }
 
     BoardCanvas.onRenderingFinished(() => {
@@ -98,7 +98,7 @@ function reverseString(str) {
     BoardCanvas.onTryingToPlaceStoneAt((x, y) => {
         if (!currentReversi.isOver && players[currentReversi.player].type == PlayerType.human && currentReversi.isLegalMove(x, y, currentReversi.player)) {
             currentReversi.move(x, y);
-            BoardCanvas.render(currentReversi);
+            BoardCanvas.render(currentReversi, players[currentReversi.player].type === PlayerType.human);
         }
     });
 

@@ -62,11 +62,9 @@ onmessage = ({ data }) => {
         for (let i = 0; i < 60; ++i) {
             bestMoves[i] = getValue(pointer + (i + 4) * 4, 'i32');
         }
-        console.log(`score: ${bestScore}`);
-        console.log(`NPS: ${nodeCount / scoreLockTime | 0}k nodes/sec`);
 
         postMessage({
-            type: "solution",
+            type: "result",
             result: {
                 bestScore: bestScore,
                 nodeCount: nodeCount,
@@ -80,27 +78,26 @@ onmessage = ({ data }) => {
         let pointer = _evalAllMoves_exported(data.p[1], data.p[0], data.o[1], data.o[0], data.depth) / 8;
         let movesWithScore = [];
         for (let i = 0; i < 64; ++i) {
+            let score = Module.HEAPF64[pointer + i];
+            // -EvalInf=-1000だけど、誤差が怖いので-200ぐらいにしとく
+            if (score < -200) continue;
             movesWithScore.push({
-                move: i,
-                score: Module.HEAPF64[pointer + i]
+                x: i & 7,
+                y: i >>> 3,
+                score: score
             });
         }
 
-        movesWithScore.sort((a, b) => b.score - a.score);
-        let evalLog = "";
-        movesWithScore.forEach(v => {
-            let x = v.move % 8;
-            let y = v.move / 8 | 0;
-            let moveString = "ABCDEFGH"[x] + (y + 1);
-
-            if (v.score > -1000)
-                evalLog += `${moveString}: ${v.score} `;
-        });
-        console.log(evalLog);
-
         postMessage({
-            type: "evaluation",
+            type: "result",
             result: movesWithScore
+        });
+    }
+    else if (data.type === "choose") {
+        let sq = _chooseMove_exported(data.p[1], data.p[0], data.o[1], data.o[0], data.depth);
+        postMessage({
+            type: "result",
+            result: { x: sq & 7, y: sq >>> 3 },
         });
     }
 }

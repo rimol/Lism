@@ -3,11 +3,15 @@ import { Player, flipState } from './reversi.js';
 export let Engine = (function () {
     let isReady = false;
     let callbackOnReady = () => { };
-    let isWorkerRunning = false;
-    let callback = {
+
+    // 新しいtaskが追加されたら、今あるタスクをすべてterminateするので、最も後ろの要素のみがterminated=falseとなっている
+    // 型を認識させたいので、ゴミを入れて削除するという無駄コードを書いている。
+    let tasks = [{
         resolve: function () { },
-        reject: function () { }
-    }
+        reject: function () { },
+        terminated: true,
+    }];
+    tasks.shift();
 
     let engineWorker = new Worker('../engine/wrapper.js');
     engineWorker.addEventListener('message', ({ data }) => {
@@ -16,16 +20,19 @@ export let Engine = (function () {
             console.log('init completed');
             callbackOnReady();
         }
-        else if (data.type === "evaluation") {
-            isWorkerRunning = false;
-            callback.resolve(data.result);
-        }
-        else if (data.type === "solution") {
-            isWorkerRunning = false;
-            callback.resolve(data.result);
+        else if (data.type === "result") {
+            let task = tasks.shift();
+            if (!task.terminated) {
+                task.resolve(data.result);
+            }
         }
         else if (data.type === "error") {
-            callback.reject(data.message);
+            let task = tasks.shift();
+            if (!task.terminated) {
+                task.reject(data.message);
+            }
+            // すでにrejectされているので、一応throwしておく
+            else throw data.message;
         }
     });
 
@@ -42,36 +49,32 @@ export let Engine = (function () {
         return bb;
     }
 
+    function addTask(postedData) {
+        engineWorker.postMessage(postedData);
+        tasks.forEach(task => {
+            task.terminated = true;
+            task.reject("terminated");
+        });
+
+        return new Promise((resolve, reject) => {
+            tasks.push({
+                resolve: resolve,
+                reject: reject,
+                terminated: false,
+            });
+        });
+    }
+
     function evalAllMoves(p, o, depth) {
-        if (isWorkerRunning) {
-            return new Promise((_, reject) => {
-                reject("wait for the previous task");
-            });
-        }
-        else {
-            isWorkerRunning = true;
-            engineWorker.postMessage({ type: "eval", p: p, o: o, depth: depth });
-            return new Promise((resolve, reject) => {
-                callback.resolve = resolve;
-                callback.reject = reject;
-            });
-        }
+        return addTask({ type: "eval", p: p, o: o, depth: depth });
+    }
+
+    function chooseMove(p, o, depth) {
+        return addTask({ type: "choose", p: p, o: o, depth: depth });
     }
 
     function solve(p, o) {
-        if (isWorkerRunning) {
-            return new Promise((_, reject) => {
-                reject("wait for the previous task");
-            });
-        }
-        else {
-            isWorkerRunning = true;
-            engineWorker.postMessage({ type: "solve", p: p, o: o });
-            return new Promise((resolve, reject) => {
-                callback.resolve = resolve;
-                callback.reject = reject;
-            });
-        }
+        return addTask({ type: "solve", p: p, o: o });
     }
 
     function intrand(N) {
@@ -85,11 +88,7 @@ export let Engine = (function () {
         let o = toBitboard(reversi, flipState(reversi.player));
 
         if (cnt < 64 - exactDepth) {
-            let movesWithScore = await evalAllMoves(p, o, searchDepth);
-            return {
-                x: movesWithScore[0].move % 8,
-                y: movesWithScore[0].move / 8 | 0
-            }
+            return await chooseMove(p, o, searchDepth);
         }
         else {
             let solution = await solve(p, o);
@@ -107,5 +106,10 @@ export let Engine = (function () {
                 callbackOnReady = func;
         },
         chooseBestMove: chooseBestMove,
+        async evalAllMoves(reversi, depth) {
+            let p = toBitboard(reversi, reversi.player);
+            let o = toBitboard(reversi, flipState(reversi.player));
+            return await evalAllMoves(p, o, depth);
+        },
     };
 })();

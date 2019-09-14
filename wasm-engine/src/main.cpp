@@ -72,6 +72,15 @@ int *solve_exported(HalfBitboard p0, HalfBitboard p1, HalfBitboard o0, HalfBitbo
     return &solutionArray[0];
 }
 
+EMSCRIPTEN_KEEPALIVE
+int chooseMove_exported(HalfBitboard p0, HalfBitboard p1, HalfBitboard o0, HalfBitboard o1, int depth) {
+    Bitboard p = (Bitboard)p0 << 32 | (Bitboard)p1;
+    Bitboard o = (Bitboard)o0 << 32 | (Bitboard)o1;
+
+    NegaScoutEngine engine(_evaluator);
+    return engine.chooseMove(p, o, depth);
+}
+
 struct FFO {
     Bitboard p, o;
 
