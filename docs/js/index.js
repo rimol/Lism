@@ -18,14 +18,14 @@ function reverseString(str) {
     let players = [];
     players[Player.black] = {
         type: PlayerType.human,
-        searchDepth: 1,
-        exactDepth: 1
+        searchDepth: 4,
+        exactDepth: 4
     };
 
     players[Player.white] = {
         type: PlayerType.computer,
-        searchDepth: 1,
-        exactDepth: 1
+        searchDepth: 4,
+        exactDepth: 4
     };
 
     window.changeGameMode = function (v) {
