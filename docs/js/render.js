@@ -169,19 +169,24 @@ export let BoardCanvas = (function () {
         }
     }
 
-    async function renderEvalValues(reversi, depth) {
-        let movesWithScore = await Engine.evalAllMoves(reversi, depth);
-
-        movesWithScore.forEach(ms => {
-            context.scale(2, 2);
-            context.fillStyle = "#000000";
-            context.font = "13px 'Hiragino Sans', 'Meiryo', sans-serif";
-            context.textAlign = "center";
-            context.textBaseline = "middle";
-            let valueStr = (ms.score > 0 ? "+" : ms.score < 0 ? "-" : "") + ((Math.abs(ms.score) * 10 | 0) / 10);
-            context.fillText(valueStr, IndexGridSize + (ms.x + 0.5) * GridSize, IndexGridSize + (ms.y + 0.5) * GridSize);
-            context.scale(0.5, 0.5);
-        });
+    async function renderEvalValues(_reversi, depth) {
+        let reversi = _reversi.copy();
+        for (let y = 0; y < 8; ++y) {
+            for (let x = 0; x < 8; ++x) {
+                if (!reversi.isLegalMove(x, y, reversi.player)) continue;
+                reversi.move(x, y);
+                let score = (await Engine.computeEvalValue(reversi, depth - 1)) * -1;
+                reversi.undo();
+                context.scale(2, 2);
+                context.fillStyle = (score > 0 ? "#009900" : score < 0 ? "#cc0000" : "#000000");
+                context.font = "13px 'Hiragino Sans', 'Meiryo', sans-serif";
+                context.textAlign = "center";
+                context.textBaseline = "middle";
+                let valueStr = (score > 0 ? "+" : score < 0 ? "-" : "") + ((Math.abs(score) * 10 | 0) / 10);
+                context.fillText(valueStr, IndexGridSize + (x + 0.5) * GridSize, IndexGridSize + (y + 0.5) * GridSize);
+                context.scale(0.5, 0.5);
+            }
+        }
     }
 
     renderBoardExceptStone();

@@ -26,23 +26,13 @@ void initWeightTable_exported(int stage, const int *const decompressedData) {
     _evaluator.loadWeights(stage, decompressedData);
 }
 
-// マスiに石が置けない場合は-EvalInfが入っている
-static double evalValues[64];
-
 EMSCRIPTEN_KEEPALIVE
-double *evalAllMoves_exported(HalfBitboard p0, HalfBitboard p1, HalfBitboard o0, HalfBitboard o1, int depth) {
-    std::fill(evalValues, evalValues + 64, -EvalInf);
+double computeEvalValue_exported(HalfBitboard p0, HalfBitboard p1, HalfBitboard o0, HalfBitboard o1, int depth) {
     Bitboard p = (Bitboard)p0 << 32 | (Bitboard)p1;
     Bitboard o = (Bitboard)o0 << 32 | (Bitboard)o1;
 
     NegaScoutEngine engine(_evaluator);
-    auto movesWithScore = engine.evalAllMoves(p, o, depth);
-
-    for (auto ms : movesWithScore) {
-        evalValues[ms.move] = ms.score;
-    }
-
-    return &evalValues[0];
+    return engine.computeEvalValue(p, o, depth);
 }
 
 /*

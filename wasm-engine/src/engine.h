@@ -78,6 +78,7 @@ public:
     std::vector<MoveWithScore> evalAllMoves(Bitboard p, Bitboard o, int depth);
     // 返り値は石を置くマス番号。(bitboard.h参照、0<=sq<=63)
     int chooseMove(Bitboard p, Bitboard o, int depth);
+    double computeEvalValue(Bitboard p, Bitboard o, int depth);
 
     NegaScoutEngine(const Evaluator &evaluator);
     ~NegaScoutEngine() {}

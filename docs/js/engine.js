@@ -65,16 +65,16 @@ export let Engine = (function () {
         });
     }
 
-    function evalAllMoves(p, o, depth) {
-        return addTask({ type: "eval", p: p, o: o, depth: depth });
-    }
-
     function chooseMove(p, o, depth) {
         return addTask({ type: "choose", p: p, o: o, depth: depth });
     }
 
     function solve(p, o) {
         return addTask({ type: "solve", p: p, o: o });
+    }
+
+    function _computeEvalValue(p, o, depth) {
+        return addTask({ type: "eval", p: p, o: o, depth: depth });
     }
 
     function intrand(N) {
@@ -99,6 +99,13 @@ export let Engine = (function () {
         }
     }
 
+    async function computeEvalValue(reversi, depth) {
+        let p = toBitboard(reversi, reversi.player);
+        let o = toBitboard(reversi, flipState(reversi.player));
+
+        return await _computeEvalValue(p, o, depth);
+    }
+
     return {
         isReady() { return isReady; },
         onReady(func) {
@@ -106,10 +113,6 @@ export let Engine = (function () {
                 callbackOnReady = func;
         },
         chooseBestMove: chooseBestMove,
-        async evalAllMoves(reversi, depth) {
-            let p = toBitboard(reversi, reversi.player);
-            let o = toBitboard(reversi, flipState(reversi.player));
-            return await evalAllMoves(p, o, depth);
-        },
+        computeEvalValue: computeEvalValue,
     };
 })();

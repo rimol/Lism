@@ -75,22 +75,9 @@ onmessage = ({ data }) => {
         });
     }
     else if (data.type === "eval") {
-        let pointer = _evalAllMoves_exported(data.p[1], data.p[0], data.o[1], data.o[0], data.depth) / 8;
-        let movesWithScore = [];
-        for (let i = 0; i < 64; ++i) {
-            let score = Module.HEAPF64[pointer + i];
-            // -EvalInf=-1000だけど、誤差が怖いので-200ぐらいにしとく
-            if (score < -200) continue;
-            movesWithScore.push({
-                x: i & 7,
-                y: i >>> 3,
-                score: score
-            });
-        }
-
         postMessage({
             type: "result",
-            result: movesWithScore
+            result: _computeEvalValue_exported(data.p[1], data.p[0], data.o[1], data.o[0], data.depth)
         });
     }
     else if (data.type === "choose") {

@@ -188,7 +188,7 @@ export class Reversi {
         let flip = this.undoStack.pop();
         if (typeof flip === "undefined") return;
 
-        let sq = flip.pop();
+        let sq = flip.shift();
         this._doFlip(SquareState.empty, sq, flip);
 
         flip.unshift(sq);
@@ -200,11 +200,22 @@ export class Reversi {
         let flip = this.redoStack.pop();
         if (typeof flip === "undefined") return;
 
-        let sq = flip.pop();
+        let sq = flip.shift();
         this._doFlip(this.player, sq, flip);
 
         flip.unshift(sq);
         this.undoStack.push(flip);
         this.passOrFinishGameIfNeeded();
+    }
+
+    copy() {
+        let v = new Reversi();
+        v.player = this.player;
+        v.isOver = this.isOver;
+        v.record = this.record.slice();
+        v.board = this.board.slice();
+        v.undoStack = this.undoStack.slice();
+        v.redoStack = this.redoStack.slice();
+        return v;
     }
 }

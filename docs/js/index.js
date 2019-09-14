@@ -29,6 +29,14 @@ function reverseString(str) {
         exactDepth: 4
     };
 
+    function renderCurrent() {
+        BoardCanvas.render(currentReversi, isRenderingEvalValuesEnabled && players[currentReversi.player].type === PlayerType.human, players[Player.black].searchDepth);
+    }
+
+    function renderCurrentNoAnimation() {
+        BoardCanvas.renderNoAnimation(currentReversi, isRenderingEvalValuesEnabled && players[currentReversi.player].type === PlayerType.human, players[Player.black].searchDepth);
+    }
+
     window.changeGameMode = function (v) {
         players[Player.black].type = v >>> 1 & 1;
         players[Player.white].type = v & 1;
@@ -52,15 +60,9 @@ function reverseString(str) {
         ];
         players[Player.black].searchDepth = players[Player.white].searchDepth = levels[v].searchDepth;
         players[Player.black].exactDepth = players[Player.white].exactDepth = levels[v].exactDepth;
+
+        renderCurrentNoAnimation();
     };
-
-    function renderCurrent() {
-        BoardCanvas.render(currentReversi, isRenderingEvalValuesEnabled && players[currentReversi.player].type === PlayerType.human, players[Player.black].searchDepth);
-    }
-
-    function renderCurrentNoAnimation() {
-        BoardCanvas.renderNoAnimation(currentReversi, isRenderingEvalValuesEnabled && players[currentReversi.player].type === PlayerType.human, players[Player.black].searchDepth);
-    }
 
     window.setWhetherEvalValuesDisplayedOrNot = function (v) {
         isRenderingEvalValuesEnabled = v;
