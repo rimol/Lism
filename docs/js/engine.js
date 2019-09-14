@@ -42,7 +42,7 @@ export let Engine = (function () {
         return bb;
     }
 
-    function evalAllMoves(p, o) {
+    function evalAllMoves(p, o, depth) {
         if (isWorkerRunning) {
             return new Promise((_, reject) => {
                 reject("wait for the previous task");
@@ -50,7 +50,7 @@ export let Engine = (function () {
         }
         else {
             isWorkerRunning = true;
-            engineWorker.postMessage({ type: "eval", p: p, o: o });
+            engineWorker.postMessage({ type: "eval", p: p, o: o, depth: depth });
             return new Promise((resolve, reject) => {
                 callback.resolve = resolve;
                 callback.reject = reject;
@@ -78,15 +78,14 @@ export let Engine = (function () {
         return Math.random() * N | 0;
     }
 
-    async function chooseBestMove(reversi) {
-        const SolverSearchDepth = 20;
+    async function chooseBestMove(reversi, searchDepth, exactDepth) {
         let cnt = reversi.getStoneCount(Player.black) + reversi.getStoneCount(Player.white);
 
         let p = toBitboard(reversi, reversi.player);
         let o = toBitboard(reversi, flipState(reversi.player));
 
-        if (cnt < 64 - SolverSearchDepth) {
-            let movesWithScore = await evalAllMoves(p, o);
+        if (cnt < 64 - exactDepth) {
+            let movesWithScore = await evalAllMoves(p, o, searchDepth);
             return {
                 x: movesWithScore[0].move % 8,
                 y: movesWithScore[0].move / 8 | 0

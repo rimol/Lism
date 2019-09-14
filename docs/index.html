@@ -13,7 +13,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand mr-auto mb-0 h1">Lism</a>
         <div class="navbar-nav">
-            <button type="button" id="button-settings" onclick="alert('hello!');"><img
+            <button type="button" id="button-settings" data-toggle="modal" data-target="#settings-modal"><img
                     src="res/settings.png" /></button>
         </div>
         <div class="navbar-nav">
@@ -22,16 +22,21 @@
     </nav>
 
     <div class="container">
-        <div id="com-status-box">
-            <p id="text-num-computer-stone"></p>
+        <div id="status-box">
+            <div style="width: 20px;"></div>
+            <img src="res/stone_black.png" />
+            <div id="black-num-stone" class="num-stone"></div>
+            <img src="res/stone_white.png" />
+            <div id="white-num-stone" class="num-stone"></div>
         </div>
 
         <div id="reversi-board">
             <canvas height="682" width="682" id="canvas-gameboard"></canvas>
         </div>
 
-        <div id="human-status-box">
-            <p id="text-num-human-stone"></p>
+        <div id="result-box">
+            <div style="width: 30px;"></div>
+            <p id="result-text"></p>
         </div>
     </div>
 
@@ -40,9 +45,95 @@
         </p>
     </footer>
 
+    <!-- https://cccabinet.jpn.org/bootstrap4/components/modal -->
+    <!-- モーダルの設定 -->
+    <div class="modal fade" id="settings-modal" tabindex="-1" role="dialog" aria-labelledby="settingsModalLabel">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="settingsModalLabel">設定</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <h4>対局モード</h4><br />
+                        <div class="radio-inline">
+                            <input type="radio" name="game-mode" value="0">
+                            <label>先手：人間、後手：人間</label>
+                        </div>
+                        <div class="radio-inline">
+                            <input type="radio" name="game-mode" value="1">
+                            <label>先手：人間、後手：コンピュータ</label>
+                        </div>
+                        <div class="radio-inline">
+                            <input type="radio" name="game-mode" value="2">
+                            <label>先手：コンピュータ、後手：人間</label>
+                        </div>
+                        <div class="radio-inline">
+                            <input type="radio" name="game-mode" value="3">
+                            <label>先手：コンピュータ、後手：コンピュータ</label>
+                        </div><br />
+
+                        <h4>コンピュータのレベル</h4><br />
+                        <div class="radio">
+                            <input type="radio" name="computer-level" value="1">
+                            <label>Lv. 1（1手読み）</label>
+                        </div>
+                        <div class="radio">
+                            <input type="radio" name="computer-level" value="2"">
+                                    <label>Lv. 2（2手読み）</label>
+                                </div>
+                                <div class=" radio">
+                            <input type="radio" name="computer-level" value="3">
+                            <label>Lv. 3（3手読み）</label>
+                        </div>
+                        <div class="radio">
+                            <input type="radio" name="computer-level" value="4">
+                            <label>Lv. 4（4手読み）</label>
+                        </div>
+                        <div class="radio">
+                            <input type="radio" name="computer-level" value="5">
+                            <label>Lv. 5（4手読み/残り12手完全読み）</label>
+                        </div>
+                        <div class="radio">
+                            <input type="radio" name="computer-level" value="6"">
+                                    <label>Lv. 6（6手読み）</label>
+                                <div class=" radio">
+                            <input type="radio" name="computer-level" value="7">
+                            <label>Lv. 7（6手読み/残り14手完全読み）</label>
+                        </div>
+                        <div class="radio">
+                            <input type="radio" name="computer-level" value="8">
+                            <label>Lv. 8（8手読み/残り16手完全読み）</label>
+                        </div>
+                        <div class="radio">
+                            <input type="radio" name="computer-level" value="9">
+                            <label>Lv. 9（10手読み/残り20手完全読み）</label>
+                        </div>
+                        <div class="radio">
+                            <input type="radio" name="computer-level" value="10">
+                            <label>Lv. 10（12手読み/残り22手完全読み）</label>
+                        </div><br />
+                    </div>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script>
+        $(function () {
+            $(":radio").on('change', function () {
+                if (this.name == "game-mode") {
+                    window.changeGameMode(Number(this.value));
+                }
+                else if (this.name == "computer-level") {
+                    window.changeComputerLevel(Number(this.value));
+                }
+            });
+        });
+    </script>
     <script type="module" src="js/index.js"></script>
 </body>
 

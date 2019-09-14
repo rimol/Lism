@@ -2,19 +2,28 @@
     /* background: rgb(198, 251, 255); */
 }
 
+.num-stone {
+    width: 30px;
+    height: 40px;
+    text-align: center;
+    line-height: 40px;
+}
+
+#status-box {
+    height: 40px;
+    width: 180px;
+    margin: auto;
+}
+
+#status-box>* {
+    display: inline-block;
+    vertical-align: top;
+}
+
 #button-settings {
     border: 0;
     background: none;
     margin-right: 10px
-}
-
-#com-status-box, #human-status-box {
-    width: 341px;
-    margin: auto;
-}
-
-#com-status-box {
-    text-align: right;
 }
 
 #reversi-board {
@@ -29,6 +38,16 @@
 #canvas-gameboard {
     width: 341px;
     height: 341px;
+}
+
+#result-box {
+    margin: 18px auto;
+    padding: auto;
+    text-align: center;
+}
+
+#result-box>* {
+    display: inline-block;
 }
 
 #footer {
