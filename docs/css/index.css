@@ -1,12 +1,17 @@
-#reversi {
-    /* background: rgb(198, 251, 255); */
-}
+/* #reversi {
+    background-color: floralwhite
+} */
 
 .num-stone {
     width: 30px;
     height: 40px;
     text-align: center;
     line-height: 40px;
+}
+
+.img-button {
+    border: 0;
+    background: none;
 }
 
 #status-box {
@@ -21,8 +26,6 @@
 }
 
 #button-settings {
-    border: 0;
-    background: none;
     margin-right: 10px
 }
 
@@ -41,13 +44,24 @@
 }
 
 #result-box {
-    margin: 18px auto;
-    padding: auto;
+    margin: auto;
+    padding: 0 0 0 10px;
     text-align: center;
 }
 
 #result-box>* {
     display: inline-block;
+}
+
+#controler-box {
+    margin:  auto;
+    padding: 0 0 0 10px;
+    text-align: center;
+
+}
+
+#controler-box>* {
+    margin: 0 15px;
 }
 
 #footer {

@@ -69,16 +69,27 @@ function reverseString(str) {
         renderCurrentNoAnimation();
     };
 
-    function newGame() {
+    window.undo = function () {
+        currentReversi.undo();
+        renderCurrentNoAnimation();
+    };
+
+    window.redo = function () {
+        currentReversi.redo();
+        renderCurrentNoAnimation();
+    };
+
+    window.newGame = function newGame() {
         currentReversi = new Reversi();
         renderCurrent();
-    }
+        document.getElementById("result-text").innerHTML = ``;
+    };
 
     function displayNumStone() {
         document.getElementById("black-num-stone").innerHTML = currentReversi.getStoneCount(Player.black);
         document.getElementById("white-num-stone").innerHTML = currentReversi.getStoneCount(Player.white);
 
-        if (currentReversi.isOver) {
+        if (currentReversi.terminatedBoard()) {
             let diff = currentReversi.getStoneCount(Player.black) - currentReversi.getStoneCount(Player.white);
 
             if (diff > 0) {
@@ -94,16 +105,20 @@ function reverseString(str) {
     }
 
     async function onCOMTurn() {
-        let move = OpeningBook.has(currentReversi)
-            ? OpeningBook.chooseRandom(currentReversi)
-            : await Engine.chooseBestMove(currentReversi, players[currentReversi.player].searchDepth, players[currentReversi.player].exactDepth);
+        try {
+            let move = OpeningBook.has(currentReversi)
+                ? OpeningBook.chooseRandom(currentReversi)
+                : await Engine.chooseBestMove(currentReversi, players[currentReversi.player].searchDepth, players[currentReversi.player].exactDepth);
 
-        if (!currentReversi.isLegalMove(move.x, move.y, currentReversi.player)) {
-            throw "Engineが不正な手を打ちました";
+            if (!currentReversi.isLegalMove(move.x, move.y, currentReversi.player)) {
+                throw "Engineが不正な手を打ちました";
+            }
+
+            currentReversi.move(move.x, move.y);
+            renderCurrent();
+        } catch (e) {
+            if (e != "terminated") throw e;
         }
-
-        currentReversi.move(move.x, move.y);
-        renderCurrent();
     }
 
     BoardCanvas.onRenderingFinished(() => {

@@ -13,8 +13,10 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand mr-auto mb-0 h1">Lism</a>
         <div class="navbar-nav">
-            <button type="button" id="button-settings" data-toggle="modal" data-target="#settings-modal"><img
-                    src="res/settings.png" /></button>
+            <button type="button" class="img-button" id="button-settings" data-toggle="modal"
+                data-target="#settings-modal">
+                <img src="res/settings.png" />
+            </button>
         </div>
         <div class="navbar-nav">
             <a class="nav-item nav-link" href="https://github.com/rimol/Lism">GitHub</a>
@@ -35,8 +37,19 @@
         </div>
 
         <div id="result-box">
-            <div style="width: 30px;"></div>
             <p id="result-text"></p>
+        </div>
+
+        <div id="controler-box">
+            <button type="button" class="img-button" id="button-undo" onclick="window.undo();">
+                <img src="res/undo.png" />
+            </button>
+            <button type="button" class="img-button" id="button-redo" onclick="window.redo();">
+                <img src="res/redo.png" />
+            </button>
+            <button type="button" class="img-button" id="button-new-game" onclick="window.newGame();">
+                <img src="res/new.png" />
+            </button>
         </div>
     </div>
 

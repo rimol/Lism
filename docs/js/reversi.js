@@ -79,6 +79,7 @@ export class Reversi {
         this.board[boardIndex(3, 3)] = this.board[boardIndex(4, 4)] = SquareState.white;
 
         // 「最初に石を打った位置、そのあとにひっくり返った石の位置をもつ配列」の配列
+        // 最初が-1ならパス
         this.undoStack = [];
         this.redoStack = [];
     }
@@ -154,19 +155,14 @@ export class Reversi {
     }
 
     passOrFinishGameIfNeeded() {
-        let passed = false;
-        while (true) {
-            if (this.noLegalMoveExists(this.player)) {
-                if (passed) {
-                    this.isOver = true;
-                    return;
-                }
-                else {
-                    this.player = flipState(this.player);
-                    passed = true;
-                }
+        if (this.noLegalMoveExists(this.player)) {
+            if (this.noLegalMoveExists(flipState(this.player))) {
+                this.isOver = true;
             }
-            else return;
+            else {
+                this.player = flipState(this.player);
+                this.undoStack.push([-1]);
+            }
         }
     }
 
@@ -189,11 +185,13 @@ export class Reversi {
         if (typeof flip === "undefined") return;
 
         let sq = flip.shift();
-        this._doFlip(SquareState.empty, sq, flip);
+        if (sq != -1)
+            this._doFlip(SquareState.empty, sq, flip);
+        else
+            this.player = flipState(this.player);
 
         flip.unshift(sq);
         this.redoStack.push(flip);
-        this.passOrFinishGameIfNeeded();
     }
 
     redo() {
@@ -201,11 +199,13 @@ export class Reversi {
         if (typeof flip === "undefined") return;
 
         let sq = flip.shift();
-        this._doFlip(this.player, sq, flip);
+        if (sq != -1)
+            this._doFlip(this.player, sq, flip);
+        else
+            this.player = flipState(this.player);
 
         flip.unshift(sq);
         this.undoStack.push(flip);
-        this.passOrFinishGameIfNeeded();
     }
 
     copy() {
@@ -217,5 +217,9 @@ export class Reversi {
         v.undoStack = this.undoStack.slice();
         v.redoStack = this.redoStack.slice();
         return v;
+    }
+
+    terminatedBoard() {
+        return this.noLegalMoveExists(Player.black) && this.noLegalMoveExists(Player.white);
     }
 }
