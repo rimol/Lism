@@ -2,6 +2,10 @@
     background-color: floralwhite
 } */
 
+#overall-container {
+    margin: 10px auto;
+}
+
 .num-stone {
     width: 30px;
     height: 40px;
@@ -34,18 +38,17 @@
 
     background-color: transparent;
 
-    width: 341px;
-    height: 341px;
+    width: 338px;
+    height: 338px;
 }
 
 #canvas-gameboard {
-    width: 341px;
-    height: 341px;
+    width: 338px;
+    height: 338px;
 }
 
 #result-box {
     margin: auto;
-    padding: 0 0 0 10px;
     text-align: center;
 }
 
@@ -55,7 +58,6 @@
 
 #controler-box {
     margin:  auto;
-    padding: 0 0 0 10px;
     text-align: center;
 
 }
