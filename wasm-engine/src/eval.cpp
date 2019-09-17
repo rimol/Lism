@@ -13,43 +13,29 @@ using std::endl;
 
 PatternEvaluator::PatternEvaluator() : usedPattern(nullptr), weights(nullptr) {}
 
-PatternEvaluator::PatternEvaluator(const Pattern *usedPattern, int numStages) : usedPattern(usedPattern), numStages(numStages), stageInterval(60 / numStages) {
-    weights = new int **[numStages];
-    for (int i = 0; i < numStages; ++i) {
-        weights[i] = new int *[usedPattern->numGroup()];
-        for (int j = 0; j < usedPattern->numGroup(); ++j) {
-            weights[i][j] = new int[usedPattern->numPackedIndex(j)];
-        }
+PatternEvaluator::PatternEvaluator(const Pattern *usedPattern, int numStages) : usedPattern(usedPattern), numStages(numStages), stageInterval(60 / numStages), weightSize() {
+    weightSize = 0;
+    for (int j = 0; j < usedPattern->numGroup(); ++j) {
+        weightSize += usedPattern->numPackedIndex(j);
     }
+    weightSize *= numStages;
+
+    weights = new int[weightSize];
 }
 
 PatternEvaluator &PatternEvaluator::operator=(const PatternEvaluator &patternEvaluator) {
     // 今確保しているメモリを解放
-    if (weights != nullptr) {
-        for (int i = 0; i < numStages; ++i) {
-            if (weights[i] != nullptr) {
-                for (int j = 0; j < usedPattern->numGroup(); ++j) {
-                    delete[] weights[i][j];
-                }
-                delete[] weights[i];
-            }
-        }
-        delete[] weights;
-    }
+    delete weights;
 
     numStages = patternEvaluator.numStages;
     stageInterval = patternEvaluator.stageInterval;
     usedPattern = patternEvaluator.usedPattern;
+    weightSize = patternEvaluator.weightSize;
 
-    weights = new int **[numStages];
-    for (int i = 0; i < numStages; ++i) {
-        weights[i] = new int *[usedPattern->numGroup()];
-        for (int j = 0; j < usedPattern->numGroup(); ++j) {
-            weights[i][j] = new int[usedPattern->numPackedIndex(j)];
-            for (int k = 0; k < usedPattern->numPackedIndex(j); ++k) {
-                weights[i][j][k] = patternEvaluator.weights[i][j][k];
-            }
-        }
+    weights = new int[weightSize];
+
+    for (int i = 0; i < weightSize; ++i) {
+        weights[i] = patternEvaluator.weights[i];
     }
 
     return *this;
@@ -60,23 +46,13 @@ PatternEvaluator::PatternEvaluator(const PatternEvaluator &patternEvaluator) {
 }
 
 PatternEvaluator::~PatternEvaluator() {
-    if (weights != nullptr) {
-        for (int i = 0; i < numStages; ++i) {
-            for (int j = 0; j < usedPattern->numGroup(); ++j) {
-                delete[] weights[i][j];
-            }
-            delete[] weights[i];
-        }
-        delete[] weights;
-    }
+    delete weights;
 }
 
 void PatternEvaluator::loadWeights(int stage, const int *const decompressedData) {
-    int x = 0;
-    for (int j = 0; j < usedPattern->numGroup(); ++j) {
-        for (int k = 0; k < usedPattern->numPackedIndex(j); ++k) {
-            weights[stage][j][k] = decompressedData[x++];
-        }
+    int *fweights = weights + (stage * (weightSize / numStages));
+    for (int i = 0; i < (weightSize / numStages); ++i) {
+        fweights[i] = decompressedData[i];
     }
 }
 /*
@@ -159,64 +135,74 @@ double PatternEvaluator::evaluate(Bitboard p, Bitboard o) const {
 
     int t = getStage(p, o);
 
+    int *pweight = weights + (t * (weightSize / numStages));
     int e = 0;
+    e += pweight[usedPattern->packedIndex(0, getHor1Index(rotatedP[0], rotatedO[0]))];
+    e += pweight[usedPattern->packedIndex(0, getHor1Index(rotatedP[1], rotatedO[1]))];
+    e += pweight[usedPattern->packedIndex(0, getHor1Index(rotatedP[2], rotatedO[2]))];
+    e += pweight[usedPattern->packedIndex(0, getHor1Index(rotatedP[3], rotatedO[3]))];
+    pweight += usedPattern->numPackedIndex(0);
 
-    e += weights[t][0][usedPattern->packedIndex(0, getHor1Index(rotatedP[0], rotatedO[0]))];
-    e += weights[t][0][usedPattern->packedIndex(0, getHor1Index(rotatedP[1], rotatedO[1]))];
-    e += weights[t][0][usedPattern->packedIndex(0, getHor1Index(rotatedP[2], rotatedO[2]))];
-    e += weights[t][0][usedPattern->packedIndex(0, getHor1Index(rotatedP[3], rotatedO[3]))];
+    e += pweight[usedPattern->packedIndex(1, getHor2Index(rotatedP[0], rotatedO[0]))];
+    e += pweight[usedPattern->packedIndex(1, getHor2Index(rotatedP[1], rotatedO[1]))];
+    e += pweight[usedPattern->packedIndex(1, getHor2Index(rotatedP[2], rotatedO[2]))];
+    e += pweight[usedPattern->packedIndex(1, getHor2Index(rotatedP[3], rotatedO[3]))];
+    pweight += usedPattern->numPackedIndex(1);
 
-    e += weights[t][1][usedPattern->packedIndex(1, getHor2Index(rotatedP[0], rotatedO[0]))];
-    e += weights[t][1][usedPattern->packedIndex(1, getHor2Index(rotatedP[1], rotatedO[1]))];
-    e += weights[t][1][usedPattern->packedIndex(1, getHor2Index(rotatedP[2], rotatedO[2]))];
-    e += weights[t][1][usedPattern->packedIndex(1, getHor2Index(rotatedP[3], rotatedO[3]))];
+    e += pweight[usedPattern->packedIndex(2, getHor3Index(rotatedP[0], rotatedO[0]))];
+    e += pweight[usedPattern->packedIndex(2, getHor3Index(rotatedP[1], rotatedO[1]))];
+    e += pweight[usedPattern->packedIndex(2, getHor3Index(rotatedP[2], rotatedO[2]))];
+    e += pweight[usedPattern->packedIndex(2, getHor3Index(rotatedP[3], rotatedO[3]))];
+    pweight += usedPattern->numPackedIndex(2);
 
-    e += weights[t][2][usedPattern->packedIndex(2, getHor3Index(rotatedP[0], rotatedO[0]))];
-    e += weights[t][2][usedPattern->packedIndex(2, getHor3Index(rotatedP[1], rotatedO[1]))];
-    e += weights[t][2][usedPattern->packedIndex(2, getHor3Index(rotatedP[2], rotatedO[2]))];
-    e += weights[t][2][usedPattern->packedIndex(2, getHor3Index(rotatedP[3], rotatedO[3]))];
+    e += pweight[usedPattern->packedIndex(3, getHor4Index(rotatedP[0], rotatedO[0]))];
+    e += pweight[usedPattern->packedIndex(3, getHor4Index(rotatedP[1], rotatedO[1]))];
+    e += pweight[usedPattern->packedIndex(3, getHor4Index(rotatedP[2], rotatedO[2]))];
+    e += pweight[usedPattern->packedIndex(3, getHor4Index(rotatedP[3], rotatedO[3]))];
+    pweight += usedPattern->numPackedIndex(3);
 
-    e += weights[t][3][usedPattern->packedIndex(3, getHor4Index(rotatedP[0], rotatedO[0]))];
-    e += weights[t][3][usedPattern->packedIndex(3, getHor4Index(rotatedP[1], rotatedO[1]))];
-    e += weights[t][3][usedPattern->packedIndex(3, getHor4Index(rotatedP[2], rotatedO[2]))];
-    e += weights[t][3][usedPattern->packedIndex(3, getHor4Index(rotatedP[3], rotatedO[3]))];
+    e += pweight[usedPattern->packedIndex(4, getCornerIndex(rotatedP[0], rotatedO[0]))];
+    e += pweight[usedPattern->packedIndex(4, getCornerIndex(rotatedP[1], rotatedO[1]))];
+    e += pweight[usedPattern->packedIndex(4, getCornerIndex(rotatedP[2], rotatedO[2]))];
+    e += pweight[usedPattern->packedIndex(4, getCornerIndex(rotatedP[3], rotatedO[3]))];
+    pweight += usedPattern->numPackedIndex(4);
 
-    e += weights[t][4][usedPattern->packedIndex(4, getCornerIndex(rotatedP[0], rotatedO[0]))];
-    e += weights[t][4][usedPattern->packedIndex(4, getCornerIndex(rotatedP[1], rotatedO[1]))];
-    e += weights[t][4][usedPattern->packedIndex(4, getCornerIndex(rotatedP[2], rotatedO[2]))];
-    e += weights[t][4][usedPattern->packedIndex(4, getCornerIndex(rotatedP[3], rotatedO[3]))];
+    e += pweight[usedPattern->packedIndex(5, getDiag8Index(rotatedP[0], rotatedO[0]))];
+    e += pweight[usedPattern->packedIndex(5, getDiag8Index(rotatedP[1], rotatedO[1]))];
+    pweight += usedPattern->numPackedIndex(5);
 
-    e += weights[t][5][usedPattern->packedIndex(5, getDiag8Index(rotatedP[0], rotatedO[0]))];
-    e += weights[t][5][usedPattern->packedIndex(5, getDiag8Index(rotatedP[1], rotatedO[1]))];
+    e += pweight[usedPattern->packedIndex(6, getDiag7Index(rotatedP[0], rotatedO[0]))];
+    e += pweight[usedPattern->packedIndex(6, getDiag7Index(rotatedP[1], rotatedO[1]))];
+    e += pweight[usedPattern->packedIndex(6, getDiag7Index(rotatedP[2], rotatedO[2]))];
+    e += pweight[usedPattern->packedIndex(6, getDiag7Index(rotatedP[3], rotatedO[3]))];
+    pweight += usedPattern->numPackedIndex(6);
 
-    e += weights[t][6][usedPattern->packedIndex(6, getDiag7Index(rotatedP[0], rotatedO[0]))];
-    e += weights[t][6][usedPattern->packedIndex(6, getDiag7Index(rotatedP[1], rotatedO[1]))];
-    e += weights[t][6][usedPattern->packedIndex(6, getDiag7Index(rotatedP[2], rotatedO[2]))];
-    e += weights[t][6][usedPattern->packedIndex(6, getDiag7Index(rotatedP[3], rotatedO[3]))];
+    e += pweight[usedPattern->packedIndex(7, getDiag6Index(rotatedP[0], rotatedO[0]))];
+    e += pweight[usedPattern->packedIndex(7, getDiag6Index(rotatedP[1], rotatedO[1]))];
+    e += pweight[usedPattern->packedIndex(7, getDiag6Index(rotatedP[2], rotatedO[2]))];
+    e += pweight[usedPattern->packedIndex(7, getDiag6Index(rotatedP[3], rotatedO[3]))];
+    pweight += usedPattern->numPackedIndex(7);
 
-    e += weights[t][7][usedPattern->packedIndex(7, getDiag6Index(rotatedP[0], rotatedO[0]))];
-    e += weights[t][7][usedPattern->packedIndex(7, getDiag6Index(rotatedP[1], rotatedO[1]))];
-    e += weights[t][7][usedPattern->packedIndex(7, getDiag6Index(rotatedP[2], rotatedO[2]))];
-    e += weights[t][7][usedPattern->packedIndex(7, getDiag6Index(rotatedP[3], rotatedO[3]))];
+    e += pweight[usedPattern->packedIndex(8, getDiag5Index(rotatedP[0], rotatedO[0]))];
+    e += pweight[usedPattern->packedIndex(8, getDiag5Index(rotatedP[1], rotatedO[1]))];
+    e += pweight[usedPattern->packedIndex(8, getDiag5Index(rotatedP[2], rotatedO[2]))];
+    e += pweight[usedPattern->packedIndex(8, getDiag5Index(rotatedP[3], rotatedO[3]))];
+    pweight += usedPattern->numPackedIndex(8);
 
-    e += weights[t][8][usedPattern->packedIndex(8, getDiag5Index(rotatedP[0], rotatedO[0]))];
-    e += weights[t][8][usedPattern->packedIndex(8, getDiag5Index(rotatedP[1], rotatedO[1]))];
-    e += weights[t][8][usedPattern->packedIndex(8, getDiag5Index(rotatedP[2], rotatedO[2]))];
-    e += weights[t][8][usedPattern->packedIndex(8, getDiag5Index(rotatedP[3], rotatedO[3]))];
+    e += pweight[usedPattern->packedIndex(9, getDiag4Index(rotatedP[0], rotatedO[0]))];
+    e += pweight[usedPattern->packedIndex(9, getDiag4Index(rotatedP[1], rotatedO[1]))];
+    e += pweight[usedPattern->packedIndex(9, getDiag4Index(rotatedP[2], rotatedO[2]))];
+    e += pweight[usedPattern->packedIndex(9, getDiag4Index(rotatedP[3], rotatedO[3]))];
+    pweight += usedPattern->numPackedIndex(9);
 
-    e += weights[t][9][usedPattern->packedIndex(9, getDiag4Index(rotatedP[0], rotatedO[0]))];
-    e += weights[t][9][usedPattern->packedIndex(9, getDiag4Index(rotatedP[1], rotatedO[1]))];
-    e += weights[t][9][usedPattern->packedIndex(9, getDiag4Index(rotatedP[2], rotatedO[2]))];
-    e += weights[t][9][usedPattern->packedIndex(9, getDiag4Index(rotatedP[3], rotatedO[3]))];
-
-    e += weights[t][10][usedPattern->packedIndex(10, getCorner25Index(rotatedP[0], rotatedO[0]))];
-    e += weights[t][10][usedPattern->packedIndex(10, getCorner25Index(rotatedP[1], rotatedO[1]))];
-    e += weights[t][10][usedPattern->packedIndex(10, getCorner25Index(rotatedP[2], rotatedO[2]))];
-    e += weights[t][10][usedPattern->packedIndex(10, getCorner25Index(rotatedP[3], rotatedO[3]))];
-    e += weights[t][10][usedPattern->packedIndex(10, getCorner25Index(rotatedP[4], rotatedO[4]))];
-    e += weights[t][10][usedPattern->packedIndex(10, getCorner25Index(rotatedP[5], rotatedO[5]))];
-    e += weights[t][10][usedPattern->packedIndex(10, getCorner25Index(rotatedP[6], rotatedO[6]))];
-    e += weights[t][10][usedPattern->packedIndex(10, getCorner25Index(rotatedP[7], rotatedO[7]))];
+    e += pweight[usedPattern->packedIndex(10, getCorner25Index(rotatedP[0], rotatedO[0]))];
+    e += pweight[usedPattern->packedIndex(10, getCorner25Index(rotatedP[1], rotatedO[1]))];
+    e += pweight[usedPattern->packedIndex(10, getCorner25Index(rotatedP[2], rotatedO[2]))];
+    e += pweight[usedPattern->packedIndex(10, getCorner25Index(rotatedP[3], rotatedO[3]))];
+    e += pweight[usedPattern->packedIndex(10, getCorner25Index(rotatedP[4], rotatedO[4]))];
+    e += pweight[usedPattern->packedIndex(10, getCorner25Index(rotatedP[5], rotatedO[5]))];
+    e += pweight[usedPattern->packedIndex(10, getCorner25Index(rotatedP[6], rotatedO[6]))];
+    e += pweight[usedPattern->packedIndex(10, getCorner25Index(rotatedP[7], rotatedO[7]))];
 
     return static_cast<double>(e) / 1000.0;
 }

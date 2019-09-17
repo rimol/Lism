@@ -25,7 +25,9 @@ class PatternEvaluator : public Evaluator {
     int numStages;
     int stageInterval;
     const Pattern *usedPattern;
-    int ***weights;
+
+    int weightSize;
+    int *weights;
 
     inline int getStage(Bitboard p, Bitboard o) const {
         return (popcount(p | o) - 4 - 1) / stageInterval;
