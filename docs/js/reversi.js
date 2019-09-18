@@ -66,7 +66,7 @@ export function getFlip(board, x, y, color) {
 }
 
 export class Reversi {
-    constructor(recordStr) {
+    constructor() {
         this.player = SquareState.black;
         this.isOver = false;
         this.record = [];
@@ -85,30 +85,26 @@ export class Reversi {
     }
 
     loadRecord(recordStr) {
-        if (typeof recordStr !== "string") {
-            throw "棋譜は文字列やぞ";
-        }
+        if (typeof recordStr !== "string")
+            return false;
 
-        if (recordStr.length === 0 || recordStr.length % 2 === 1) {
-            throw "不正な棋譜データ";
-        }
+        if (recordStr.length === 0 || recordStr.length % 2 === 1)
+            return false;
 
         for (let i = 0; i < recordStr.length; i += 2) {
             let x = "abcdefghABCDEFGH".indexOf(recordStr[i]);
             let y = "12345678".indexOf(recordStr[i + 1]);
 
-            if (x === -1 || y === -1) {
-                throw "不正な棋譜データ";
-            }
+            if (x === -1 || y === -1)
+                return false;
 
             x %= 8;
-
-            if (!this.isLegalMove(x, y, this.player)) {
-                throw "不正な棋譜データ";
-            }
+            if (!this.isLegalMove(x, y, this.player))
+                return false;
 
             this.move(x, y);
         }
+        return true;
     }
 
     // ひっくり返るアニメーションにつかうよ

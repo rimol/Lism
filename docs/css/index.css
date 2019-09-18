@@ -59,11 +59,27 @@
 #controler-box {
     margin:  auto;
     text-align: center;
-
 }
 
 #controler-box>* {
     margin: 0 15px;
+}
+
+#record-box {
+    margin: 20px auto;
+    text-align: center;
+}
+
+#record-box>* {
+    display: inline-block;
+}
+
+#record-text {
+    width: 240px;
+}
+
+#load-button {
+    padding: auto 5px;
 }
 
 #footer {

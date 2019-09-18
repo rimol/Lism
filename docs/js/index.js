@@ -81,9 +81,22 @@ function reverseString(str) {
 
     window.newGame = function newGame() {
         currentReversi = new Reversi();
-        renderCurrent();
+        renderCurrentNoAnimation();
         document.getElementById("result-text").innerHTML = ``;
     };
+
+    window.loadRecord = function () {
+        let newReversi = new Reversi();
+
+        if (newReversi.loadRecord(document.getElementById("record-text").value)) {
+            currentReversi = newReversi;
+            renderCurrentNoAnimation();
+            document.getElementById("result-text").innerHTML = ``;
+        }
+        else {
+            this.alert('an invalid record.');
+        }
+    }
 
     function displayNumStone() {
         document.getElementById("black-num-stone").innerHTML = currentReversi.getStoneCount(Player.black);
