@@ -46,7 +46,7 @@ public:
     virtual ~AlphaBetaEngine() {}
 };
 
-constexpr int NearLeaf = 1;
+constexpr int NearLeaf = 2;
 
 // 本命
 class NegaScoutEngine : public AlphaBetaEngine {
