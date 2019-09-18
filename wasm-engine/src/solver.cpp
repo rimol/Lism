@@ -399,3 +399,7 @@ Solution Solver::solve(Bitboard p, Bitboard o) {
 
     return solution;
 }
+
+int Solver::computeBestScore(Bitboard p, Bitboard o) {
+    return negaScout1(p, o, -64, 64, 64 - popcount(p | o), false);
+}

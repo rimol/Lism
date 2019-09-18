@@ -71,6 +71,15 @@ int chooseMove_exported(HalfBitboard p0, HalfBitboard p1, HalfBitboard o0, HalfB
     return engine.chooseMove(p, o, depth);
 }
 
+EMSCRIPTEN_KEEPALIVE
+int computeBestScore_exported(HalfBitboard p0, HalfBitboard p1, HalfBitboard o0, HalfBitboard o1) {
+    Bitboard p = (Bitboard)p0 << 32 | (Bitboard)p1;
+    Bitboard o = (Bitboard)o0 << 32 | (Bitboard)o1;
+
+    Solver solver(_evaluator);
+    return solver.computeBestScore(p, o);
+}
+
 struct FFO {
     Bitboard p, o;
 

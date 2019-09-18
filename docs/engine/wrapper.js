@@ -87,4 +87,10 @@ onmessage = ({ data }) => {
             result: { x: sq & 7, y: sq >>> 3 },
         });
     }
+    else if (data.type === "eval_exact") {
+        postMessage({
+            type: "result",
+            result: _computeBestScore_exported(data.p[1], data.p[0], data.o[1], data.o[0])
+        });
+    }
 }

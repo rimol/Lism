@@ -30,11 +30,11 @@ function reverseString(str) {
     };
 
     function renderCurrent() {
-        BoardCanvas.render(currentReversi, isRenderingEvalValuesEnabled && players[currentReversi.player].type === PlayerType.human, players[Player.black].searchDepth);
+        BoardCanvas.render(currentReversi, isRenderingEvalValuesEnabled && players[currentReversi.player].type === PlayerType.human, players[Player.black]);
     }
 
     function renderCurrentNoAnimation() {
-        BoardCanvas.renderNoAnimation(currentReversi, isRenderingEvalValuesEnabled && players[currentReversi.player].type === PlayerType.human, players[Player.black].searchDepth);
+        BoardCanvas.renderNoAnimation(currentReversi, isRenderingEvalValuesEnabled && players[currentReversi.player].type === PlayerType.human, players[Player.black]);
     }
 
     window.changeGameMode = function (v) {
@@ -70,12 +70,16 @@ function reverseString(str) {
     };
 
     window.undo = function () {
-        currentReversi.undo();
+        do {
+            currentReversi.undo();
+        } while (players[currentReversi.player].type != PlayerType.human && currentReversi.undoStack.length > 0);
         renderCurrentNoAnimation();
     };
 
     window.redo = function () {
-        currentReversi.redo();
+        do {
+            currentReversi.redo();
+        } while (players[currentReversi.player].type != PlayerType.human && currentReversi.redoStack.length > 0);
         renderCurrentNoAnimation();
     };
 

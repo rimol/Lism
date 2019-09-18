@@ -34,6 +34,7 @@ class Solver {
     std::vector<int> getBestMoves(Bitboard p, Bitboard o, int bestScore);
 
 public:
+    int computeBestScore(Bitboard p, Bitboard o);
     Solution solve(Bitboard p, Bitboard o);
     Solver(const Evaluator &evaluator);
     ~Solver();

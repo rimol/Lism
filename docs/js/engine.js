@@ -77,6 +77,10 @@ export let Engine = (function () {
         return addTask({ type: "eval", p: p, o: o, depth: depth });
     }
 
+    function _computeBestScore(p, o) {
+        return addTask({ type: "eval_exact", p: p, o: o });
+    }
+
     function intrand(N) {
         return Math.random() * N | 0;
     }
@@ -106,6 +110,13 @@ export let Engine = (function () {
         return await _computeEvalValue(p, o, depth);
     }
 
+    async function computeBestScore(reversi) {
+        let p = toBitboard(reversi, reversi.player);
+        let o = toBitboard(reversi, flipState(reversi.player));
+
+        return await _computeBestScore(p, o);
+    }
+
     return {
         isReady() { return isReady; },
         onReady(func) {
@@ -114,5 +125,6 @@ export let Engine = (function () {
         },
         chooseBestMove: chooseBestMove,
         computeEvalValue: computeEvalValue,
+        computeBestScore: computeBestScore,
     };
 })();

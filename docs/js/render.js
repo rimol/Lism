@@ -1,5 +1,5 @@
 // 盤面描画
-import { SquareState, Reversi, flipState, boardIndex } from './reversi.js';
+import { SquareState, Reversi, flipState, boardIndex, Player } from './reversi.js';
 import { Engine } from './engine.js';
 import { _Howl as Howl } from '../lib/howler.min.js';
 
@@ -169,15 +169,18 @@ export let BoardCanvas = (function () {
         }
     }
 
-    async function renderEvalValues(_reversi, depth) {
+    async function renderEvalValues(_reversi, { searchDepth, exactDepth }) {
         let reversi = _reversi.copy();
+        let useSolver = (64 - reversi.getStoneCount(Player.black) - reversi.getStoneCount(Player.white)) <= exactDepth;
         for (let y = 0; y < 8; ++y) {
             for (let x = 0; x < 8; ++x) {
                 if (!reversi.isLegalMove(x, y, reversi.player)) continue;
                 let currentColor = reversi.player;
                 reversi.move(x, y);
                 let nextColor = reversi.player;
-                let score = await Engine.computeEvalValue(reversi, depth - 1);
+                let score = useSolver
+                    ? await Engine.computeBestScore(reversi)
+                    : await Engine.computeEvalValue(reversi, searchDepth - 1);
                 if (currentColor != nextColor) score *= -1;
                 reversi.undo();
 
