@@ -174,9 +174,13 @@ export let BoardCanvas = (function () {
         for (let y = 0; y < 8; ++y) {
             for (let x = 0; x < 8; ++x) {
                 if (!reversi.isLegalMove(x, y, reversi.player)) continue;
+                let currentColor = reversi.player;
                 reversi.move(x, y);
-                let score = (await Engine.computeEvalValue(reversi, depth - 1)) * -1;
+                let nextColor = reversi.player;
+                let score = await Engine.computeEvalValue(reversi, depth - 1);
+                if (currentColor != nextColor) score *= -1;
                 reversi.undo();
+
                 context.scale(2, 2);
                 context.fillStyle = (score > 0 ? "#009900" : score < 0 ? "#cc0000" : "#000000");
                 context.font = "13px 'Hiragino Sans', 'Meiryo', sans-serif";
