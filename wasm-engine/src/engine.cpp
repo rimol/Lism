@@ -508,7 +508,7 @@ int NegaScoutEngine::chooseMove(Bitboard p, Bitboard o, int depth) {
     }
 
     stopWatch.setTimePoint();
-    std::cout << "all: " << stopWatch.getElapsedTime_millisec(0) << std::endl;
+    std::cout << "all: " << stopWatch.getElapsedTime_millisec(0) << " msec" << std::endl;
     std::cout << nodeCount << " Nodes" << std::endl;
 
     assert(sq != -1);
@@ -526,7 +526,7 @@ double NegaScoutEngine::computeEvalValue(Bitboard p, Bitboard o, int depth) {
     double score = negaScout_eval(p, o, -EvalInf, EvalInf, 0, false);
 
     stopWatch.setTimePoint();
-    std::cout << "all: " << stopWatch.getElapsedTime_millisec(0) << std::endl;
+    std::cout << "all: " << stopWatch.getElapsedTime_millisec(0) << " msec" << std::endl;
     std::cout << nodeCount << " Nodes" << std::endl;
 
     return score;

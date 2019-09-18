@@ -397,9 +397,20 @@ Solution Solver::solve(Bitboard p, Bitboard o) {
     solution.scoreLockTime = stopWatch.getElapsedTime_millisec(0);
     solution.wholeTime = stopWatch.getElapsedTime_millisec(1);
 
+    std::cout << "score lock time: " << solution.scoreLockTime << " msec" << std::endl;
+    std::cout << solution.nodeCount << " Nodes" << std::endl;
+
     return solution;
 }
 
 int Solver::computeBestScore(Bitboard p, Bitboard o) {
-    return negaScout1(p, o, -64, 64, 64 - popcount(p | o), false);
+    clear();
+    StopWatch stopWatch;
+    int score = negaScout1(p, o, -64, 64, 64 - popcount(p | o), false);
+    stopWatch.setTimePoint();
+
+    std::cout << "all: " << stopWatch.getElapsedTime_millisec(0) << " msec" << std::endl;
+    std::cout << nodeCount << " Nodes" << std::endl;
+
+    return score;
 }
