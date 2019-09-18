@@ -98,7 +98,7 @@ function reverseString(str) {
             document.getElementById("result-text").innerHTML = ``;
         }
         else {
-            this.alert('an invalid record.');
+            this.alert('棋譜がおかしいです (´・ω・｀)');
         }
     }
 
@@ -119,6 +119,8 @@ function reverseString(str) {
                 document.getElementById("result-text").innerHTML = '引き分けです！';
             }
         }
+
+        document.getElementById("record-text").value = currentReversi.getRecord();
     }
 
     async function onCOMTurn() {

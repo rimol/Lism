@@ -69,7 +69,6 @@ export class Reversi {
     constructor() {
         this.player = SquareState.black;
         this.isOver = false;
-        this.record = [];
 
         // 普通に配列でもちます
         this.board = Array(64);
@@ -208,7 +207,6 @@ export class Reversi {
         let v = new Reversi();
         v.player = this.player;
         v.isOver = this.isOver;
-        v.record = this.record.slice();
         v.board = this.board.slice();
         v.undoStack = this.undoStack.slice();
         v.redoStack = this.redoStack.slice();
@@ -217,5 +215,10 @@ export class Reversi {
 
     terminatedBoard() {
         return this.noLegalMoveExists(Player.black) && this.noLegalMoveExists(Player.white);
+    }
+
+    getRecord() {
+        let t = this.undoStack.reduce((prev, cur, _, __) => prev + "abcdefgh"[cur[0] & 7] + ((cur[0] >>> 3) + 1), "");
+        return this.redoStack.reduceRight((prev, cur, _, __) => prev + "abcdefgh"[cur[0] & 7] + ((cur[0] >>> 3) + 1), t);
     }
 }
