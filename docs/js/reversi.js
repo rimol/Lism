@@ -211,7 +211,18 @@ export class Reversi {
     }
 
     getRecord() {
-        let t = this.undoStack.reduce((prev, cur, _, __) => prev + "abcdefgh"[cur[0] & 7] + ((cur[0] >>> 3) + 1), "");
-        return this.redoStack.reduceRight((prev, cur, _, __) => prev + "abcdefgh"[cur[0] & 7] + ((cur[0] >>> 3) + 1), t);
+        let t = this.undoStack.reduce((prev, cur, _, __) => {
+            if (cur[0] != -1)
+                return prev + "abcdefgh"[cur[0] & 7] + ((cur[0] >>> 3) + 1);
+            else
+                return prev;
+        }, "");
+
+        return this.redoStack.reduceRight((prev, cur, _, __) => {
+            if (cur[0] != -1)
+                return prev + "abcdefgh"[cur[0] & 7] + ((cur[0] >>> 3) + 1);
+            else
+                return prev;
+        }, t);
     }
 }
