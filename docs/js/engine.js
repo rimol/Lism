@@ -1,15 +1,6 @@
 import { Player, flipState } from './reversi.js';
 
 export let Engine = (function () {
-    // お借りしました: http://d.hatena.ne.jp/tshino/20180106/1515218776
-    function newWorkerViaBlob(relativePath) {
-        let baseURL = window.location.href.replace(/\\/g, '/').replace(/\/[^\/]*$/, '/');
-        let array = ['importScripts("' + baseURL + relativePath + '");'];
-        let blob = new Blob(array, { type: 'text/javascript' });
-        let url = window.URL.createObjectURL(blob);
-        return new Worker(url);
-    };
-
     let isReady = false;
     let callbackOnReady = () => { };
 
@@ -22,7 +13,7 @@ export let Engine = (function () {
     }];
     tasks.shift();
 
-    let engineWorker = newWorkerViaBlob('../engine/wrapper.js');
+    let engineWorker = new Worker('../engine/wrapper.js');
     engineWorker.addEventListener('message', ({ data }) => {
         if (data.type === "init_completed") {
             isReady = true;
