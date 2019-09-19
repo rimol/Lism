@@ -68,7 +68,6 @@ export function getFlip(board, x, y, color) {
 export class Reversi {
     constructor() {
         this.player = SquareState.black;
-        this.isOver = false;
 
         // 普通に配列でもちます
         this.board = Array(64);
@@ -149,15 +148,10 @@ export class Reversi {
         return true;
     }
 
-    passOrFinishGameIfNeeded() {
-        if (this.noLegalMoveExists(this.player)) {
-            if (this.noLegalMoveExists(flipState(this.player))) {
-                this.isOver = true;
-            }
-            else {
-                this.player = flipState(this.player);
-                this.undoStack.push([-1]);
-            }
+    passIfNeeded() {
+        if (this.noLegalMoveExists(this.player) && !this.noLegalMoveExists(flipState(this.player))) {
+            this.player = flipState(this.player);
+            this.undoStack.push([-1]);
         }
     }
 
@@ -172,7 +166,7 @@ export class Reversi {
 
         // 別の世界線はclear
         this.redoStack.length = 0;
-        this.passOrFinishGameIfNeeded();
+        this.passIfNeeded();
     }
 
     undo() {
@@ -206,14 +200,13 @@ export class Reversi {
     copy() {
         let v = new Reversi();
         v.player = this.player;
-        v.isOver = this.isOver;
         v.board = this.board.slice();
         v.undoStack = this.undoStack.slice();
         v.redoStack = this.redoStack.slice();
         return v;
     }
 
-    terminatedBoard() {
+    isOver() {
         return this.noLegalMoveExists(Player.black) && this.noLegalMoveExists(Player.white);
     }
 

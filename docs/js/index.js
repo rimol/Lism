@@ -1,15 +1,10 @@
-﻿import { Player, Reversi, flipState } from './reversi.js';
+﻿import { Player, Reversi } from './reversi.js';
 import { BoardCanvas } from './render.js';
 import { Engine } from './engine.js';
 import { OpeningBook } from './book.js';
 
-function reverseString(str) {
-    return str.split("").reverse().join("");
-}
-
 !function () {
     let currentReversi = new Reversi();
-    currentReversi.isOver = true;
     let isRenderingEvalValuesEnabled = true;
 
     let PlayerType = {
@@ -41,7 +36,8 @@ function reverseString(str) {
         players[Player.black].type = v >>> 1 & 1;
         players[Player.white].type = v & 1;
 
-        if (!currentReversi.isOver && players[currentReversi.player].type == PlayerType.computer) onCOMTurn();
+        if (Engine.isReady && !currentReversi.isOver() && players[currentReversi.player].type == PlayerType.computer)
+            onCOMTurn();
     };
 
     window.changeComputerLevel = function (v) {
@@ -61,15 +57,18 @@ function reverseString(str) {
         players[Player.black].searchDepth = players[Player.white].searchDepth = levels[v].searchDepth;
         players[Player.black].exactDepth = players[Player.white].exactDepth = levels[v].exactDepth;
 
-        renderCurrentNoAnimation();
+        if (Engine.isReady) renderCurrentNoAnimation();
     };
 
     window.setWhetherEvalValuesDisplayedOrNot = function (v) {
         isRenderingEvalValuesEnabled = v;
-        renderCurrentNoAnimation();
+
+        if (Engine.isReady) renderCurrentNoAnimation();
     };
 
     window.undo = function () {
+        if (!Engine.isReady) return;
+
         do {
             currentReversi.undo();
         } while (players[currentReversi.player].type != PlayerType.human && currentReversi.undoStack.length > 0);
@@ -77,6 +76,8 @@ function reverseString(str) {
     };
 
     window.redo = function () {
+        if (!Engine.isReady) return;
+
         do {
             currentReversi.redo();
         } while (players[currentReversi.player].type != PlayerType.human && currentReversi.redoStack.length > 0);
@@ -84,12 +85,16 @@ function reverseString(str) {
     };
 
     window.newGame = function newGame() {
+        if (!Engine.isReady) return;
+
         currentReversi = new Reversi();
         renderCurrentNoAnimation();
         document.getElementById("result-text").innerHTML = ``;
     };
 
     window.loadRecord = function () {
+        if (!Engine.isReady) return;
+
         let newReversi = new Reversi();
 
         if (newReversi.loadRecord(document.getElementById("record-text").value)) {
@@ -106,7 +111,7 @@ function reverseString(str) {
         document.getElementById("black-num-stone").innerHTML = currentReversi.getStoneCount(Player.black);
         document.getElementById("white-num-stone").innerHTML = currentReversi.getStoneCount(Player.white);
 
-        if (currentReversi.terminatedBoard()) {
+        if (currentReversi.isOver()) {
             let diff = currentReversi.getStoneCount(Player.black) - currentReversi.getStoneCount(Player.white);
 
             if (diff > 0) {
@@ -142,11 +147,11 @@ function reverseString(str) {
 
     BoardCanvas.onRenderingFinished(() => {
         displayNumStone();
-        if (!currentReversi.isOver && players[currentReversi.player].type == PlayerType.computer) onCOMTurn();
+        if (!currentReversi.isOver() && players[currentReversi.player].type == PlayerType.computer) onCOMTurn();
     });
 
     BoardCanvas.onTryingToPlaceStoneAt((x, y) => {
-        if (!currentReversi.isOver && players[currentReversi.player].type == PlayerType.human && currentReversi.isLegalMove(x, y, currentReversi.player)) {
+        if (Engine.isReady && !currentReversi.isOver() && players[currentReversi.player].type == PlayerType.human && currentReversi.isLegalMove(x, y, currentReversi.player)) {
             currentReversi.move(x, y);
             renderCurrent();
         }

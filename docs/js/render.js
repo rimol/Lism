@@ -196,7 +196,7 @@ export let BoardCanvas = (function () {
         }
     }
 
-    renderBoardExceptStone();
+    //renderBoardExceptStone();
 
     return {
         render(reversi, isRenderingEvalValuesEnabled, depth) {
