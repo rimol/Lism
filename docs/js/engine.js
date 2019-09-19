@@ -13,7 +13,7 @@ export let Engine = (function () {
     }];
     tasks.shift();
 
-    let engineWorker = new Worker('../engine/wrapper.js');
+    let engineWorker = new Worker('./js/wrapper.js');
     engineWorker.addEventListener('message', ({ data }) => {
         if (data.type === "init_completed") {
             isReady = true;
